@@ -134,7 +134,11 @@ class EyeMouseApp:
         tk.Button(window, text="Close", command=window.destroy, bg="#1c2633", fg="white", relief="flat", width=18).grid(row=len(fields) + 2, column=0, columnspan=2, pady=12)
 
     def _tracking_tick(self) -> None:
-        if not self.tracking or self.camera is None or self.tracker is None:
+        if not self.tracking or self.camera is None:
+            return
+        if self.tracking_mode == "hand" and self.hand_tracker is None:
+            return
+        if self.tracking_mode == "gaze" and self.tracker is None:
             return
         frame = self.camera.read()
         if frame is not None:
