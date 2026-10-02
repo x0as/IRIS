@@ -54,7 +54,7 @@ class HandTracker:
     def _count_extended_fingers(landmarks) -> int:
         wrist = landmarks[0]
         count = 0
-        for tip_index, joint_index in ((8, 6), (12, 10), (16, 14), (20, 18)):
+        for tip_index, joint_index in ((4, 3), (8, 6), (12, 10), (16, 14), (20, 18)):
             tip = landmarks[tip_index]
             joint = landmarks[joint_index]
             if np.hypot(tip.x - wrist.x, tip.y - wrist.y) > np.hypot(joint.x - wrist.x, joint.y - wrist.y):

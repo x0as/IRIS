@@ -10,10 +10,11 @@ from .smoothing import ExponentialSmoother
 
 
 class HandSession:
-    def __init__(self, screen_size: tuple[int, int], smoothing: float, mouse_enabled: bool) -> None:
+    def __init__(self, screen_size: tuple[int, int], smoothing: float, mouse_enabled: bool, gesture_preview: bool = False) -> None:
         self.screen_width, self.screen_height = screen_size
         self.smoother = ExponentialSmoother(smoothing)
         self.mouse = MouseController(mouse_enabled)
+        self.gesture_preview = gesture_preview
         self.last_point: GazePoint | None = None
         self._pinching = False
         self._last_click = 0.0
@@ -40,13 +41,14 @@ class HandSession:
         return point
 
     def _update_pose_gestures(self, y: float, finger_count: int, now: float) -> None:
-        if not self.mouse.enabled:
+        if not self.mouse.enabled and not self.gesture_preview:
             self._last_finger_count = finger_count
             self._last_scroll_y = y if finger_count == 2 else None
             return
         if finger_count == 0:
             if self._last_finger_count != 0 and now - self._last_click >= 0.6:
-                pyautogui.click(button="left")
+                if self.mouse.enabled:
+                    pyautogui.click(button="left")
                 self._last_click = now
                 self.last_gesture = "fist click"
             self._last_scroll_y = None
@@ -54,7 +56,8 @@ class HandSession:
             if self._last_scroll_y is not None:
                 delta = self._last_scroll_y - y
                 if abs(delta) >= 0.025:
-                    pyautogui.scroll(max(-8, min(8, round(delta * 40))))
+                    if self.mouse.enabled:
+                        pyautogui.scroll(max(-8, min(8, round(delta * 40))))
                     self.last_gesture = "2-finger scroll"
                     self._last_scroll_y = y
             else:
@@ -69,7 +72,7 @@ class HandSession:
             self._gesture_start_time = now
             self._gesture_fingers = finger_count
             return
-        if finger_count not in (3, 4):
+        if finger_count not in (3, 5):
             self._gesture_start_x = None
             self._gesture_start_time = None
             self._gesture_fingers = None
@@ -86,11 +89,13 @@ class HandSession:
         if elapsed <= 0.15 or abs(distance) < 0.18:
             return
         direction = "right" if distance > 0 else "left"
-        if finger_count == 4:
-            pyautogui.hotkey("win", "ctrl", direction)
-            self.last_gesture = f"4-finger desktop {direction}"
+        if finger_count == 5:
+            if self.mouse.enabled:
+                pyautogui.hotkey("win", "ctrl", direction)
+            self.last_gesture = f"open-palm desktop {direction}"
         else:
-            pyautogui.hotkey("alt", "tab" if direction == "right" else "shift", "tab" if direction == "left" else "tab")
+            if self.mouse.enabled:
+                pyautogui.hotkey("alt", "tab" if direction == "right" else "shift", "tab" if direction == "left" else "tab")
             self.last_gesture = f"3-finger app switch {direction}"
         self._last_gesture_time = now
         self._gesture_start_x = x

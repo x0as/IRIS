@@ -34,8 +34,9 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - Hand mode pinch: left click
 - Fist transition: single left click
 - Two fingers with vertical movement: scroll up or down
-- In Hand Control Mode, a 4-finger horizontal swipe sends `Win+Ctrl+Left/Right` to change virtual desktops.
+- In Hand Control Mode, an open-palm horizontal swipe sends `Win+Ctrl+Left/Right` to change virtual desktops.
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
+- `HAND TEST MODE` shows recognized hand gestures and pointer feedback without sending mouse clicks, scrolling, or Windows shortcuts.
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 

@@ -55,7 +55,7 @@ class EyeMouseApp:
         canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-int(event.delta / 120), "units"))
         tk.Label(content, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
         tk.Label(content, text="Webcam gaze and hand control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
-        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
+        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND TEST MODE", lambda: self.start_hand_tracking(False, True)), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True, False)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
             tk.Button(content, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
         tk.Label(content, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
         tk.Label(content, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates  |  Scroll for all controls", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(pady=16)
@@ -112,18 +112,18 @@ class EyeMouseApp:
         except Exception as exc:
             messagebox.showerror("Tracking error", str(exc))
 
-    def start_hand_tracking(self, mouse_enabled: bool) -> None:
+    def start_hand_tracking(self, mouse_enabled: bool, gesture_preview: bool = False) -> None:
         try:
             self.stop_tracking()
             self.status.set("Opening camera and loading hand model...")
             self.root.update()
             self._ensure_hand_hardware()
-            self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled)
+            self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled, gesture_preview)
             self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
             self.tracking_mode = "hand"
             self.tracking = True
             self.paused = False
-            self.status.set("Hand control active. Move your index finger; pinch thumb and index to click.")
+            self.status.set("Hand test mode active. Gestures are previewed safely." if gesture_preview else "Hand control active. Move your index finger; pinch thumb and index to click.")
             self._tracking_tick()
         except Exception as exc:
             messagebox.showerror("Hand tracking error", str(exc))
@@ -159,8 +159,12 @@ class EyeMouseApp:
                 cv2.waitKey(1)
                 if hand is not None:
                     x, y, pinching, finger_count = hand
+                    previous_gesture = self.hand_session.last_gesture
                     point = self.hand_session.update(x, y, pinching, finger_count)
                     self.status.set(f"Hand control | {finger_count} fingers | {self.hand_session.last_gesture}")
+                    if self.hand_session.last_gesture != previous_gesture and ("click" in self.hand_session.last_gesture or "scroll" in self.hand_session.last_gesture):
+                        if self.overlay is not None:
+                            self.overlay.flash_click()
                     if self.overlay is not None:
                         self.overlay.show_at(point)
                 elif self.overlay is not None:
