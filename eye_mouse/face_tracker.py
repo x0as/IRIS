@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import math
+import time
+import urllib.request
+from pathlib import Path
 
 import cv2
 import mediapipe as mp
@@ -12,12 +15,22 @@ from .models import EyeFeatures, TrackingResult
 class FaceTracker:
     def __init__(self, debug: bool = False) -> None:
         self.debug = debug
-        self._mesh = mp.solutions.face_mesh.FaceMesh(
-            max_num_faces=1,
-            refine_landmarks=True,
-            min_detection_confidence=0.55,
+        model_path = Path(__file__).with_name("face_landmarker.task")
+        if not model_path.exists():
+            urllib.request.urlretrieve(
+                "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                model_path,
+            )
+        options = mp.tasks.vision.FaceLandmarkerOptions(
+            base_options=mp.tasks.BaseOptions(model_asset_path=str(model_path)),
+            running_mode=mp.tasks.vision.RunningMode.VIDEO,
+            num_faces=1,
+            min_face_detection_confidence=0.55,
+            min_face_presence_confidence=0.55,
             min_tracking_confidence=0.55,
         )
+        self._mesh = mp.tasks.vision.FaceLandmarker.create_from_options(options)
+        self._timestamp_ms = 0
 
     @staticmethod
     def _distance(a: np.ndarray, b: np.ndarray) -> float:
@@ -26,11 +39,13 @@ class FaceTracker:
     def process(self, frame: np.ndarray) -> TrackingResult:
         height, width = frame.shape[:2]
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = self._mesh.process(rgb)
-        if not result.multi_face_landmarks:
+        image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        self._timestamp_ms = max(self._timestamp_ms + 1, round(time.monotonic() * 1000))
+        result = self._mesh.detect_for_video(image, self._timestamp_ms)
+        if not result.face_landmarks:
             return TrackingResult(frame=frame, face_detected=False)
 
-        landmarks = result.multi_face_landmarks[0].landmark
+        landmarks = result.face_landmarks[0]
         points = np.array([(landmark.x * width, landmark.y * height) for landmark in landmarks])
         left_corners = (points[33], points[133])
         right_corners = (points[362], points[263])

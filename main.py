@@ -38,7 +38,7 @@ class EyeMouseApp:
     def _build_ui(self) -> None:
         tk.Label(self.root, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
         tk.Label(self.root, text="Webcam gaze control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
-        for text, command in (("START CALIBRATION", self.start_calibration), ("PREVIEW MODE", lambda: self.start_tracking(False)), ("MOUSE CONTROL MODE", lambda: self.start_tracking(True)), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
+        for text, command in (("START CALIBRATION", self.start_calibration), ("PREVIEW MODE", lambda: self.start_tracking(False)), ("MOUSE CONTROL MODE", lambda: self.start_tracking(True)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
             tk.Button(self.root, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
         tk.Label(self.root, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
         tk.Label(self.root, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(side="bottom", pady=16)
@@ -83,6 +83,22 @@ class EyeMouseApp:
         except Exception as exc:
             messagebox.showerror("Tracking error", str(exc))
 
+    def show_settings(self) -> None:
+        window = tk.Toplevel(self.root)
+        window.title("Project IRIS Settings")
+        window.configure(bg="#10151c")
+        window.resizable(False, False)
+        fields = (("Cursor smoothing", "smoothing", 0.05, 1.0, 0.01), ("Blink threshold", "blink_ear_threshold", 0.10, 0.40, 0.01), ("Long blink seconds", "long_blink_duration", 0.30, 1.20, 0.05), ("Double-blink window", "double_blink_window", 0.30, 1.20, 0.05), ("Click cooldown", "click_cooldown", 0.20, 2.00, 0.05))
+        for row, (label, name, minimum, maximum, step) in enumerate(fields):
+            tk.Label(window, text=label, fg="white", bg="#10151c", anchor="w", width=22).grid(row=row, column=0, padx=12, pady=7)
+            variable = tk.DoubleVar(value=getattr(self.settings, name))
+            tk.Scale(window, variable=variable, from_=minimum, to=maximum, resolution=step, orient="horizontal", length=220, bg="#10151c", fg="white", highlightthickness=0, troughcolor="#2c3a4d", command=lambda value, setting=name, var=variable: setattr(self.settings, setting, var.get())).grid(row=row, column=1, padx=12, pady=7)
+        indicator = tk.BooleanVar(value=self.settings.indicator_enabled)
+        tk.Checkbutton(window, text="Show gaze indicator", variable=indicator, command=lambda: setattr(self.settings, "indicator_enabled", indicator.get()), fg="white", bg="#10151c", selectcolor="#2c3a4d", activebackground="#10151c", activeforeground="white").grid(row=len(fields), column=0, columnspan=2, pady=8)
+        debug = tk.BooleanVar(value=self.settings.debug)
+        tk.Checkbutton(window, text="Debug readout", variable=debug, command=lambda: setattr(self.settings, "debug", debug.get()), fg="white", bg="#10151c", selectcolor="#2c3a4d", activebackground="#10151c", activeforeground="white").grid(row=len(fields) + 1, column=0, columnspan=2, pady=8)
+        tk.Button(window, text="Close", command=window.destroy, bg="#1c2633", fg="white", relief="flat", width=18).grid(row=len(fields) + 2, column=0, columnspan=2, pady=12)
+
     def _tracking_tick(self) -> None:
         if not self.tracking or self.camera is None or self.tracker is None:
             return
@@ -93,6 +109,10 @@ class EyeMouseApp:
                 point = self.session.update(result.features)
                 if point is not None and self.overlay is not None:
                     self.overlay.show_at(point)
+                if self.settings.debug:
+                    raw = self.session.last_raw
+                    smooth = self.session.last_smoothed
+                    self.status.set(f"EAR {result.features.ear:.2f} | raw {raw.x:.0f},{raw.y:.0f} | smooth {smooth.x:.0f},{smooth.y:.0f} | {self.session.blink_detector.last_state} | {self.session.last_action}")
             elif self.overlay is not None:
                 self.overlay.hide()
         self.root.after(10, self._tracking_tick)
