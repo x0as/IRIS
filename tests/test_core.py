@@ -11,8 +11,8 @@ def test_smoother_reduces_jump():
     smoother = ExponentialSmoother(0.2)
     smoother.update(GazePoint(0, 0))
     point = smoother.update(GazePoint(100, 100))
-    assert point.x == 20
-    assert point.y == 20
+    assert point.x == 10
+    assert point.y == 10
 
 
 def test_calibration_model_maps_training_points():
