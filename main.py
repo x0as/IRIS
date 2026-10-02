@@ -23,7 +23,7 @@ class EyeMouseApp:
         self.settings = Settings()
         self.root = tk.Tk()
         self.root.title("Project IRIS")
-        self.root.geometry("460x420")
+        self.root.geometry("500x560")
         self.root.configure(bg="#10151c")
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.root.bind("<Escape>", lambda _event: self.stop_tracking())
@@ -44,12 +44,23 @@ class EyeMouseApp:
         self._build_ui()
 
     def _build_ui(self) -> None:
-        tk.Label(self.root, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
-        tk.Label(self.root, text="Webcam gaze control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
+        container = tk.Frame(self.root, bg="#10151c")
+        container.pack(fill="both", expand=True)
+        canvas = tk.Canvas(container, bg="#10151c", highlightthickness=0)
+        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        content = tk.Frame(canvas, bg="#10151c")
+        content.bind("<Configure>", lambda _event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=content, anchor="nw", width=465)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-int(event.delta / 120), "units"))
+        tk.Label(content, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
+        tk.Label(content, text="Webcam gaze and hand control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
         for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND CALIBRATION", self.start_hand_calibration), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
-            tk.Button(self.root, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
-        tk.Label(self.root, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
-        tk.Label(self.root, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(side="bottom", pady=16)
+            tk.Button(content, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
+        tk.Label(content, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
+        tk.Label(content, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates  |  Scroll for all controls", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(pady=16)
 
     def _ensure_hardware(self) -> None:
         if self.camera is None:
