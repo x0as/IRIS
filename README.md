@@ -32,6 +32,8 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - Two short blinks: left click
 - One longer blink: right click
 - Hand mode pinch: left click
+- Fist transition: single left click
+- Two fingers with vertical movement: scroll up or down
 - In Hand Control Mode, a 4-finger horizontal swipe sends `Win+Ctrl+Left/Right` to change virtual desktops.
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
 

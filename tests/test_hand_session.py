@@ -16,3 +16,22 @@ def test_hand_swipe_shortcut(monkeypatch):
     session._gesture_start_time -= 0.2
     session.update(0.45, 0.5, False, 4)
     assert calls == [("win", "ctrl", "right")]
+
+
+def test_fist_clicks_once(monkeypatch):
+    clicks = []
+    monkeypatch.setattr("pyautogui.click", lambda **kwargs: clicks.append(kwargs))
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
+    session.update(0.5, 0.5, False, 1)
+    session.update(0.5, 0.5, False, 0)
+    session.update(0.5, 0.5, False, 0)
+    assert clicks == [{"button": "left"}]
+
+
+def test_two_finger_scroll(monkeypatch):
+    scrolls = []
+    monkeypatch.setattr("pyautogui.scroll", lambda amount: scrolls.append(amount))
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
+    session.update(0.5, 0.6, False, 2)
+    session.update(0.5, 0.5, False, 2)
+    assert scrolls == [4]
