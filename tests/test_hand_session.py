@@ -15,7 +15,7 @@ def test_hand_swipe_shortcut(monkeypatch):
     session.update(0.20, 0.5, False, 5, (True, True, True, True, True))
     session._gesture_start_time -= 0.2
     session.update(0.45, 0.5, False, 5, (True, True, True, True, True))
-    assert calls == [("win", "ctrl", "right")]
+    assert calls == [("win", "ctrl", "left")]
 
 
 def test_fist_clicks_once(monkeypatch):

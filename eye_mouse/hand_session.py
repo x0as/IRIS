@@ -97,8 +97,9 @@ class HandSession:
         direction = "right" if distance > 0 else "left"
         if finger_count == 5:
             if self.mouse.enabled:
-                pyautogui.hotkey("win", "ctrl", direction)
-            self.last_gesture = f"open-palm desktop {direction}"
+                desktop_direction = "left" if direction == "right" else "right"
+                pyautogui.hotkey("win", "ctrl", desktop_direction)
+            self.last_gesture = f"open-palm desktop {'left' if direction == 'right' else 'right'}"
         else:
             if self.mouse.enabled:
                 pyautogui.hotkey("alt", "tab" if direction == "right" else "shift", "tab" if direction == "left" else "tab")
