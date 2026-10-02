@@ -163,9 +163,10 @@ class EyeMouseApp:
                     command = self.hand_session.last_gesture if self.hand_session.last_gesture != "None" else self._hand_command(fingers, pinching)
                     self.status.set(f"Hand control | {finger_names} | {command}")
                     camera_frame = self.hand_tracker.last_frame if self.hand_tracker is not None else frame
-                    cv2.putText(camera_frame, f"Fingers: {finger_names}", (18, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                    cv2.putText(camera_frame, f"Action: {command}", (18, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (80, 220, 255), 2)
-                    if self.hand_session.last_gesture != previous_gesture and ("click" in self.hand_session.last_gesture or "scroll" in self.hand_session.last_gesture):
+                    self._draw_camera_text(camera_frame, f"Fingers: {finger_names}", (18, 32), (255, 255, 255))
+                    self._draw_camera_text(camera_frame, f"Action: {command}", (18, 64), (80, 220, 255))
+                    gesture_text = self.hand_session.last_gesture.lower()
+                    if self.hand_session.last_gesture != previous_gesture and ("click" in gesture_text or "scroll" in gesture_text):
                         if self.overlay is not None:
                             self.overlay.flash_click()
                     if self.overlay is not None:
@@ -174,8 +175,8 @@ class EyeMouseApp:
                     self.overlay.hide()
                 else:
                     camera_frame = self.hand_tracker.last_frame if self.hand_tracker is not None else frame
-                    cv2.putText(camera_frame, "Fingers: none", (18, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                    cv2.putText(camera_frame, "Action: NO HAND", (18, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (80, 220, 255), 2)
+                    self._draw_camera_text(camera_frame, "Fingers: none", (18, 32), (255, 255, 255))
+                    self._draw_camera_text(camera_frame, "Action: NO HAND", (18, 64), (80, 220, 255))
                 cv2.imshow("Project IRIS Camera", self.hand_tracker.last_frame if self.hand_tracker is not None else frame)
                 cv2.waitKey(1)
                 self.root.after(10, self._tracking_tick)
@@ -208,6 +209,11 @@ class EyeMouseApp:
         if not any(fingers):
             return "FIST CLICK"
         return "NO COMMAND"
+
+    @staticmethod
+    def _draw_camera_text(frame, text: str, position: tuple[int, int], color: tuple[int, int, int]) -> None:
+        cv2.putText(frame, text, position, cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 5, cv2.LINE_AA)
+        cv2.putText(frame, text, position, cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
 
     def stop_tracking(self) -> None:
         self.tracking = False

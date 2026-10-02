@@ -62,9 +62,10 @@ class HandSession:
             if self._last_scroll_y is not None:
                 delta = self._last_scroll_y - y
                 if abs(delta) >= 0.012:
+                    scroll_direction = "up" if delta > 0 else "down"
                     if self.mouse.enabled:
                         pyautogui.scroll(max(-8, min(8, round(delta * 60))))
-                    self.last_gesture = "2-finger scroll"
+                    self.last_gesture = f"SCROLL {scroll_direction.upper()}"
                     self._last_scroll_y = y
             else:
                 self._last_scroll_y = y

@@ -36,6 +36,7 @@ def test_two_finger_scroll(monkeypatch):
     session.update(0.5, 0.6, False, 2, index_middle)
     session.update(0.5, 0.5, False, 2, index_middle)
     assert scrolls == [6]
+    assert session.last_gesture == "SCROLL UP"
 
 
 def test_pinch_click_does_not_move_cursor(monkeypatch):
