@@ -158,10 +158,11 @@ class EyeMouseApp:
                 cv2.imshow("Project IRIS Camera", self.hand_tracker.last_frame if self.hand_tracker is not None else frame)
                 cv2.waitKey(1)
                 if hand is not None:
-                    x, y, pinching, finger_count = hand
+                    x, y, pinching, finger_count, fingers = hand
                     previous_gesture = self.hand_session.last_gesture
-                    point = self.hand_session.update(x, y, pinching, finger_count)
-                    self.status.set(f"Hand control | {finger_count} fingers | {self.hand_session.last_gesture}")
+                    point = self.hand_session.update(x, y, pinching, finger_count, fingers)
+                    finger_names = ", ".join(name for name, detected in zip(("thumb", "index", "middle", "ring", "pinky"), fingers) if detected) or "fist"
+                    self.status.set(f"Hand control | {finger_names} | {self.hand_session.last_gesture}")
                     if self.hand_session.last_gesture != previous_gesture and ("click" in self.hand_session.last_gesture or "scroll" in self.hand_session.last_gesture):
                         if self.overlay is not None:
                             self.overlay.flash_click()

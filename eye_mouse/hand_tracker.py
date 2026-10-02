@@ -47,19 +47,18 @@ class HandTracker:
         index_tip = landmarks[8]
         thumb_tip = landmarks[4]
         pinch_distance = np.hypot(index_tip.x - thumb_tip.x, index_tip.y - thumb_tip.y)
-        finger_count = self._count_extended_fingers(landmarks)
-        return float(index_tip.x), float(index_tip.y), bool(pinch_distance < 0.055), finger_count
+        fingers = self._extended_fingers(landmarks)
+        return float(index_tip.x), float(index_tip.y), bool(pinch_distance < 0.055), sum(fingers), fingers
 
     @staticmethod
-    def _count_extended_fingers(landmarks) -> int:
+    def _extended_fingers(landmarks) -> tuple[bool, bool, bool, bool, bool]:
         wrist = landmarks[0]
-        count = 0
+        extended = []
         for tip_index, joint_index in ((4, 3), (8, 6), (12, 10), (16, 14), (20, 18)):
             tip = landmarks[tip_index]
             joint = landmarks[joint_index]
-            if np.hypot(tip.x - wrist.x, tip.y - wrist.y) > np.hypot(joint.x - wrist.x, joint.y - wrist.y):
-                count += 1
-        return count
+            extended.append(np.hypot(tip.x - wrist.x, tip.y - wrist.y) > np.hypot(joint.x - wrist.x, joint.y - wrist.y))
+        return tuple(extended)
 
     def close(self) -> None:
         self._landmarker.close()

@@ -12,9 +12,9 @@ def test_hand_swipe_shortcut(monkeypatch):
     calls = []
     monkeypatch.setattr("pyautogui.hotkey", lambda *keys: calls.append(keys))
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
-    session.update(0.20, 0.5, False, 5)
+    session.update(0.20, 0.5, False, 5, (True, True, True, True, True))
     session._gesture_start_time -= 0.2
-    session.update(0.45, 0.5, False, 5)
+    session.update(0.45, 0.5, False, 5, (True, True, True, True, True))
     assert calls == [("win", "ctrl", "right")]
 
 
@@ -32,8 +32,9 @@ def test_two_finger_scroll(monkeypatch):
     scrolls = []
     monkeypatch.setattr("pyautogui.scroll", lambda amount: scrolls.append(amount))
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
-    session.update(0.5, 0.6, False, 2)
-    session.update(0.5, 0.5, False, 2)
+    index_middle = (False, True, True, False, False)
+    session.update(0.5, 0.6, False, 2, index_middle)
+    session.update(0.5, 0.5, False, 2, index_middle)
     assert scrolls == [6]
 
 

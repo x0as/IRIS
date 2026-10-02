@@ -26,26 +26,30 @@ class HandSession:
         self._last_finger_count = -1
         self._last_scroll_y: float | None = None
 
-    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0) -> GazePoint:
+    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None) -> GazePoint:
         now = time.monotonic()
+        if fingers is None:
+            fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
+        index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
+        only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
-        point = self.last_point if (pinching or finger_count == 2) and self.last_point is not None else candidate
+        point = self.last_point if (pinching or index_middle) and self.last_point is not None else candidate
         self.last_point = point
-        if not pinching and finger_count != 2:
+        if not pinching and not index_middle and only_index:
             self.mouse.move_to(point)
         if pinching and not self._pinching and now - self._last_click >= 0.6 and self.mouse.enabled:
             pyautogui.click(button="left")
             self._last_click = now
             self.last_gesture = "pinch click"
         self._pinching = pinching
-        self._update_pose_gestures(y, finger_count, now)
+        self._update_pose_gestures(y, finger_count, now, index_middle)
         self._update_swipe_gesture(x, finger_count, now)
         return point
 
-    def _update_pose_gestures(self, y: float, finger_count: int, now: float) -> None:
+    def _update_pose_gestures(self, y: float, finger_count: int, now: float, index_middle: bool = False) -> None:
         if not self.mouse.enabled and not self.gesture_preview:
             self._last_finger_count = finger_count
-            self._last_scroll_y = y if finger_count == 2 else None
+            self._last_scroll_y = y if index_middle else None
             return
         if finger_count == 0:
             if self._last_finger_count != 0 and now - self._last_click >= 0.6:
@@ -54,7 +58,7 @@ class HandSession:
                 self._last_click = now
                 self.last_gesture = "fist click"
             self._last_scroll_y = None
-        elif finger_count == 2:
+        elif index_middle:
             if self._last_scroll_y is not None:
                 delta = self._last_scroll_y - y
                 if abs(delta) >= 0.012:
