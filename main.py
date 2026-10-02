@@ -174,7 +174,10 @@ class EyeMouseApp:
             self.session.mouse.enabled = False
         if hasattr(self, "hand_session"):
             self.hand_session.mouse.enabled = False
-        cv2.destroyWindow("Project IRIS Camera")
+        try:
+            cv2.destroyWindow("Project IRIS Camera")
+        except cv2.error:
+            cv2.destroyAllWindows()
         self.status.set("Tracking stopped. Preview mode is safe to test.")
 
     def toggle_pause(self) -> None:
