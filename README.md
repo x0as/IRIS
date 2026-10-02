@@ -22,6 +22,8 @@ python main.py
 
 Choose `START CALIBRATION`, look at each dot until it advances, then use `PREVIEW MODE` first. Preview mode moves the visible gaze indicator but never moves or clicks the OS mouse. `MOUSE CONTROL MODE` enables cursor movement and blink clicks.
 
+If gaze tracking is not reliable enough for your camera or lighting, `HAND CONTROL MODE` provides a separate fallback: move your index finger to move the pointer and pinch your thumb and index finger to left-click. Hand control does not improve gaze estimation; it is an alternative input mode.
+
 ## Controls
 
 - `ESC`: stop tracking and disable mouse actions
@@ -29,6 +31,7 @@ Choose `START CALIBRATION`, look at each dot until it advances, then use `PREVIE
 - `C`: stop and recalibrate
 - Two short blinks: left click
 - One longer blink: right click
+- Hand mode pinch: left click
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 
