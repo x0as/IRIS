@@ -33,10 +33,20 @@ def test_two_finger_scroll(monkeypatch):
     monkeypatch.setattr("pyautogui.scroll", lambda amount: scrolls.append(amount))
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     index_middle = (False, True, True, False, False)
-    session.update(0.5, 0.6, False, 2, index_middle)
-    session.update(0.5, 0.5, False, 2, index_middle)
+    session.update(0.5, 0.6, False, 2, index_middle, 0.6)
+    session.update(0.5, 0.5, False, 2, index_middle, 0.5)
     assert scrolls == [6]
     assert session.last_gesture == "SCROLL UP"
+
+
+def test_two_finger_neutral_does_not_scroll(monkeypatch):
+    scrolls = []
+    monkeypatch.setattr("pyautogui.scroll", lambda amount: scrolls.append(amount))
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
+    index_middle = (False, True, True, False, False)
+    session.update(0.5, 0.5, False, 2, index_middle, 0.5)
+    session.update(0.5, 0.5, False, 2, index_middle, 0.505)
+    assert scrolls == []
 
 
 def test_pinch_click_does_not_move_cursor(monkeypatch):

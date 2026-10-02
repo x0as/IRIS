@@ -156,9 +156,9 @@ class EyeMouseApp:
             if self.tracking_mode == "hand":
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
                 if hand is not None:
-                    x, y, pinching, finger_count, fingers = hand
+                    x, y, pinching, finger_count, fingers, palm_y = hand
                     previous_gesture = self.hand_session.last_gesture
-                    point = self.hand_session.update(x, y, pinching, finger_count, fingers)
+                    point = self.hand_session.update(x, y, pinching, finger_count, fingers, palm_y)
                     finger_names = ", ".join(name for name, detected in zip(("thumb", "index", "middle", "ring", "pinky"), fingers) if detected) or "fist"
                     command = self.hand_session.last_gesture if self.hand_session.last_gesture != "None" else self._hand_command(fingers, pinching)
                     self.status.set(f"Hand control | {finger_names} | {command}")

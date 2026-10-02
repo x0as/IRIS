@@ -26,7 +26,7 @@ class HandSession:
         self._last_finger_count = -1
         self._last_scroll_y: float | None = None
 
-    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None) -> GazePoint:
+    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None) -> GazePoint:
         now = time.monotonic()
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
@@ -42,7 +42,7 @@ class HandSession:
             self._last_click = now
             self.last_gesture = "pinch click"
         self._pinching = pinching
-        self._update_pose_gestures(y, finger_count, now, index_middle)
+        self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, index_middle)
         self._update_swipe_gesture(x, finger_count, now)
         return point
 
