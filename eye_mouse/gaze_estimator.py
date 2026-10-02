@@ -9,7 +9,7 @@ from .models import GazePoint
 
 
 class GazeEstimator:
-    """Maps calibrated feature vectors to screen coordinates with quadratic terms."""
+    """Maps calibrated feature vectors to screen coordinates with a stable linear model."""
 
     def __init__(self, screen_size: tuple[int, int]) -> None:
         self.screen_width, self.screen_height = screen_size
@@ -21,7 +21,7 @@ class GazeEstimator:
         features = np.asarray(features, dtype=float)
         if features.ndim == 1:
             features = features[None, :]
-        return np.concatenate((np.ones((len(features), 1)), features, features**2), axis=1)
+        return np.concatenate((np.ones((len(features), 1)), features), axis=1)
 
     def fit(self, features: list[np.ndarray], points: list[GazePoint]) -> float:
         if len(features) < 3 or len(features) != len(points):

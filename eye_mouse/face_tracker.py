@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import time
 import urllib.request
 from pathlib import Path
@@ -54,8 +53,14 @@ class FaceTracker:
 
         left_width = max(self._distance(*left_corners), 1.0)
         right_width = max(self._distance(*right_corners), 1.0)
-        left_ratio = (left_iris - left_corners[0]) / left_width
-        right_ratio = (right_iris - right_corners[0]) / right_width
+        left_top = (points[160] + points[158]) / 2
+        left_bottom = (points[144] + points[153]) / 2
+        right_top = (points[385] + points[387]) / 2
+        right_bottom = (points[373] + points[380]) / 2
+        left_height = max(self._distance(left_top, left_bottom), 1.0)
+        right_height = max(self._distance(right_top, right_bottom), 1.0)
+        left_ratio = np.array([(left_iris[0] - left_corners[0][0]) / left_width, (left_iris[1] - left_top[1]) / left_height])
+        right_ratio = np.array([(right_iris[0] - right_corners[0][0]) / right_width, (right_iris[1] - right_top[1]) / right_height])
         face_center = points[1] / np.array([width, height])
         face_width = max(self._distance(points[234], points[454]), 1.0)
         face_scale = face_width / width
