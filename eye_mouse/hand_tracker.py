@@ -27,15 +27,23 @@ class HandTracker:
         )
         self._landmarker = mp.tasks.vision.HandLandmarker.create_from_options(options)
         self._timestamp_ms = 0
+        self.last_frame = None
 
     def process(self, frame: np.ndarray) -> tuple[float, float, bool, int] | None:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         self._timestamp_ms = max(self._timestamp_ms + 1, round(time.monotonic() * 1000))
         result = self._landmarker.detect_for_video(image, self._timestamp_ms)
+        self.last_frame = frame.copy()
         if not result.hand_landmarks:
             return None
         landmarks = result.hand_landmarks[0]
+        for connection in mp.tasks.vision.HandLandmarksConnections.HAND_CONNECTIONS:
+            start = landmarks[connection.start]
+            end = landmarks[connection.end]
+            cv2.line(self.last_frame, (int(start.x * frame.shape[1]), int(start.y * frame.shape[0])), (int(end.x * frame.shape[1]), int(end.y * frame.shape[0])), (80, 220, 255), 2)
+        for landmark in landmarks:
+            cv2.circle(self.last_frame, (int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])), 4, (0, 80, 255), -1)
         index_tip = landmarks[8]
         thumb_tip = landmarks[4]
         pinch_distance = np.hypot(index_tip.x - thumb_tip.x, index_tip.y - thumb_tip.y)

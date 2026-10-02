@@ -11,6 +11,7 @@ from eye_mouse.camera import Camera
 from eye_mouse.config import Settings
 from eye_mouse.face_tracker import FaceTracker
 from eye_mouse.gaze_overlay import GazeOverlay
+from eye_mouse.hand_calibration import HandCalibration
 from eye_mouse.hand_session import HandSession
 from eye_mouse.hand_tracker import HandTracker
 from eye_mouse.screen import primary_screen_size
@@ -34,6 +35,7 @@ class EyeMouseApp:
         self.overlay: GazeOverlay | None = None
         self.session: TrackingSession | None = None
         self.estimator = None
+        self.hand_estimator = None
         self.tracking = False
         self.paused = False
         self.tracking_mode = "gaze"
@@ -44,7 +46,7 @@ class EyeMouseApp:
     def _build_ui(self) -> None:
         tk.Label(self.root, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
         tk.Label(self.root, text="Webcam gaze control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
-        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
+        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND CALIBRATION", self.start_hand_calibration), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
             tk.Button(self.root, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
         tk.Label(self.root, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
         tk.Label(self.root, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(side="bottom", pady=16)
@@ -103,11 +105,15 @@ class EyeMouseApp:
 
     def start_hand_tracking(self, mouse_enabled: bool) -> None:
         try:
+            if self.hand_estimator is None:
+                self.start_hand_calibration()
+                if self.hand_estimator is None:
+                    return
             self.stop_tracking()
             self.status.set("Opening camera and loading hand model...")
             self.root.update()
             self._ensure_hand_hardware()
-            self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled)
+            self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled, self.hand_estimator)
             self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
             self.tracking_mode = "hand"
             self.tracking = True
@@ -116,6 +122,18 @@ class EyeMouseApp:
             self._tracking_tick()
         except Exception as exc:
             messagebox.showerror("Hand tracking error", str(exc))
+
+    def start_hand_calibration(self) -> None:
+        try:
+            self.stop_tracking()
+            self.status.set("Opening camera for hand calibration...")
+            self.root.update()
+            self._ensure_hand_hardware()
+            self.hand_estimator, error = HandCalibration(self.root, self.hand_tracker, self.screen_size).run(self.camera)
+            self.status.set(f"Hand calibration complete. Average error: {error:.0f}px")
+        except Exception as exc:
+            messagebox.showerror("Hand calibration error", str(exc))
+            self.status.set("Hand calibration failed. Keep your hand visible and try again.")
 
     def show_settings(self) -> None:
         window = tk.Toplevel(self.root)
@@ -141,12 +159,11 @@ class EyeMouseApp:
         if self.tracking_mode == "gaze" and self.tracker is None:
             return
         frame = self.camera.read()
-        if frame is not None:
-            cv2.imshow("Project IRIS Camera", frame)
-            cv2.waitKey(1)
         if frame is not None and not self.paused:
             if self.tracking_mode == "hand":
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
+                cv2.imshow("Project IRIS Camera", self.hand_tracker.last_frame if self.hand_tracker is not None else frame)
+                cv2.waitKey(1)
                 if hand is not None:
                     x, y, pinching, finger_count = hand
                     point = self.hand_session.update(x, y, pinching, finger_count)
@@ -158,6 +175,8 @@ class EyeMouseApp:
                 self.root.after(10, self._tracking_tick)
                 return
             result = self.tracker.process(frame)
+            cv2.imshow("Project IRIS Camera", frame)
+            cv2.waitKey(1)
             if result.face_detected and self.session is not None:
                 point = self.session.update(result.features)
                 if point is not None and self.overlay is not None:

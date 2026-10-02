@@ -22,7 +22,7 @@ python main.py
 
 Choose `START CALIBRATION`, look at each dot until it advances, then use `PREVIEW MODE` first. Preview mode moves the visible gaze indicator but never moves or clicks the OS mouse. `MOUSE CONTROL MODE` enables cursor movement and blink clicks.
 
-If gaze tracking is not reliable enough for your camera or lighting, `HAND CONTROL MODE` provides a separate fallback: move your index finger to move the pointer and pinch your thumb and index finger to left-click. Hand control does not improve gaze estimation; it is an alternative input mode.
+If gaze tracking is not reliable enough for your camera or lighting, use `HAND CALIBRATION` followed by `HAND CONTROL MODE`. Place your index fingertip on each target dot while the camera overlay shows the detected hand skeleton. This learns the camera-to-screen mapping instead of assuming camera coordinates equal screen coordinates. Then move your index finger to move the pointer and pinch your thumb and index finger to left-click.
 
 ## Controls
 
