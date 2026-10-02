@@ -6,6 +6,7 @@ class Settings:
     camera_index: int = 0
     camera_width: int = 960
     camera_height: int = 540
+    low_light_enhancement: bool = True
     smoothing: float = 0.12
     blink_ear_threshold: float = 0.20
     min_blink_duration: float = 0.08

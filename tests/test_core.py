@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from eye_mouse.blink_detector import BlinkAction, BlinkDetector
+from eye_mouse.camera import Camera
 from eye_mouse.gaze_estimator import GazeEstimator
 from eye_mouse.models import GazePoint
 from eye_mouse.smoothing import ExponentialSmoother
@@ -36,3 +37,11 @@ def test_long_blink_right_click():
     detector = BlinkDetector(0.2, 0.05, 0.5, 1.5, 0.7, 0.0)
     detector.update(0.1, 1.0)
     assert detector.update(0.3, 1.7) == BlinkAction.RIGHT_CLICK
+
+
+def test_low_light_enhancement_returns_valid_frame():
+    dark_frame = np.full((32, 32, 3), 12, dtype=np.uint8)
+    enhanced = Camera._enhance_low_light(dark_frame)
+    assert enhanced.shape == dark_frame.shape
+    assert enhanced.dtype == dark_frame.dtype
+    assert enhanced.mean() > dark_frame.mean()

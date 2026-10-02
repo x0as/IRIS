@@ -46,6 +46,8 @@ The default session starts with mouse control disabled. The primary monitor reso
 
 Use a built-in webcam at roughly eye level. Sit about 40-80 cm from the display, keep the face visible, and avoid strong backlighting. The app requests a moderate camera resolution and is designed for ordinary laptop CPUs.
 
+Low-light enhancement is enabled by default. The camera uses auto-exposure plus adaptive contrast and brightness enhancement before landmark detection. It helps in dim rooms, but the webcam still needs some visible light on your face; complete darkness cannot be recovered by software.
+
 ## Tests
 
 Run deterministic tests for the calibration mapper, smoothing, and blink state machine with:

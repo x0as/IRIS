@@ -62,14 +62,14 @@ class EyeMouseApp:
 
     def _ensure_hardware(self) -> None:
         if self.camera is None:
-            self.camera = Camera(self.settings.camera_index, self.settings.camera_width, self.settings.camera_height)
+            self.camera = Camera(self.settings.camera_index, self.settings.camera_width, self.settings.camera_height, self.settings.low_light_enhancement)
             self.camera.open()
         if self.tracker is None:
             self.tracker = FaceTracker(self.settings.debug)
 
     def _ensure_hand_hardware(self) -> None:
         if self.camera is None:
-            self.camera = Camera(self.settings.camera_index, self.settings.camera_width, self.settings.camera_height)
+            self.camera = Camera(self.settings.camera_index, self.settings.camera_width, self.settings.camera_height, self.settings.low_light_enhancement)
             self.camera.open()
         if self.hand_tracker is None:
             self.hand_tracker = HandTracker()
