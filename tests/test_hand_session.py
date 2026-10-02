@@ -11,7 +11,7 @@ def test_hand_coordinates_map_to_screen():
 def test_hand_swipe_shortcut(monkeypatch):
     calls = []
     monkeypatch.setattr("pyautogui.hotkey", lambda *keys: calls.append(keys))
-    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=False)
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     session.update(0.20, 0.5, False, 4)
     session._gesture_start_time -= 0.2
     session.update(0.45, 0.5, False, 4)
