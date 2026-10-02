@@ -15,10 +15,9 @@ class Calibration:
         self.root = root
         self.tracker = tracker
         self.screen_width, self.screen_height = screen_size
+        axis = (0.08, 0.36, 0.64, 0.92)
         self.points = [
-            (0.08, 0.10), (0.50, 0.10), (0.92, 0.10),
-            (0.08, 0.50), (0.50, 0.50), (0.92, 0.50),
-            (0.08, 0.90), (0.50, 0.90), (0.92, 0.90),
+            (x, y) for y in axis for x in axis
         ]
 
     def run(self, camera) -> tuple[GazeEstimator, float]:
@@ -35,22 +34,26 @@ class Calibration:
             x, y = round(self.screen_width * x_ratio), round(self.screen_height * y_ratio)
             canvas.delete("all")
             canvas.create_text(self.screen_width // 2, 42, text=f"Calibration {index + 1} / {len(self.points)}", fill="white", font=("Segoe UI", 18))
-            canvas.create_text(self.screen_width // 2, 76, text="Look at the dot and hold your gaze", fill="#aab6c5", font=("Segoe UI", 13))
+            canvas.create_text(self.screen_width // 2, 76, text="Look at the dot with your eyes; keep your head still", fill="#aab6c5", font=("Segoe UI", 13))
             canvas.create_oval(x - 16, y - 16, x + 16, y + 16, fill="#ff4d6d", outline="white", width=3)
             window.update()
             start = time.monotonic()
             samples: list[np.ndarray] = []
-            while time.monotonic() - start < 1.25:
+            while time.monotonic() - start < 1.60:
                 frame = camera.read()
                 if frame is None:
                     continue
                 result = self.tracker.process(frame)
-                if result.face_detected and time.monotonic() - start > 0.35:
+                if result.face_detected and time.monotonic() - start > 0.60:
                     samples.append(result.features.vector)
                 window.update()
                 window.after(1)
             if samples:
-                features.append(np.mean(samples, axis=0))
+                sample_array = np.asarray(samples)
+                center = np.median(sample_array, axis=0)
+                distances = np.linalg.norm(sample_array - center, axis=1)
+                keep = distances <= np.percentile(distances, 75)
+                features.append(np.mean(sample_array[keep], axis=0))
                 targets.append(GazePoint(x, y))
         window.destroy()
         if len(features) < 3:
