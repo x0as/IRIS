@@ -32,6 +32,8 @@ If gaze tracking is not reliable enough for your camera or lighting, `HAND CONTR
 - Two short blinks: left click
 - One longer blink: right click
 - Hand mode pinch: left click
+- In Hand Control Mode, a 4-finger horizontal swipe sends `Win+Ctrl+Left/Right` to change virtual desktops.
+- In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 

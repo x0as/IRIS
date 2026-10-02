@@ -148,8 +148,9 @@ class EyeMouseApp:
             if self.tracking_mode == "hand":
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
                 if hand is not None:
-                    x, y, pinching = hand
-                    point = self.hand_session.update(x, y, pinching)
+                    x, y, pinching, finger_count = hand
+                    point = self.hand_session.update(x, y, pinching, finger_count)
+                    self.status.set(f"Hand control | {finger_count} fingers | {self.hand_session.last_gesture}")
                     if self.overlay is not None:
                         self.overlay.show_at(point)
                 elif self.overlay is not None:
