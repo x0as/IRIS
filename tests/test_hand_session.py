@@ -34,4 +34,16 @@ def test_two_finger_scroll(monkeypatch):
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     session.update(0.5, 0.6, False, 2)
     session.update(0.5, 0.5, False, 2)
-    assert scrolls == [4]
+    assert scrolls == [6]
+
+
+def test_pinch_click_does_not_move_cursor(monkeypatch):
+    clicks = []
+    moves = []
+    monkeypatch.setattr("pyautogui.click", lambda **kwargs: clicks.append(kwargs))
+    monkeypatch.setattr("pyautogui.moveTo", lambda *args, **kwargs: moves.append(args))
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
+    session.update(0.2, 0.5, False, 1)
+    session.update(0.25, 0.5, True, 1)
+    assert clicks == [{"button": "left"}]
+    assert len(moves) == 1

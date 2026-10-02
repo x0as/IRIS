@@ -27,14 +27,16 @@ class HandSession:
         self._last_scroll_y: float | None = None
 
     def update(self, x: float, y: float, pinching: bool, finger_count: int = 0) -> GazePoint:
-        point = GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1))
-        point = self.smoother.update(point)
-        self.last_point = point
-        self.mouse.move_to(point)
         now = time.monotonic()
+        candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
+        point = self.last_point if (pinching or finger_count == 2) and self.last_point is not None else candidate
+        self.last_point = point
+        if not pinching and finger_count != 2:
+            self.mouse.move_to(point)
         if pinching and not self._pinching and now - self._last_click >= 0.6 and self.mouse.enabled:
             pyautogui.click(button="left")
             self._last_click = now
+            self.last_gesture = "pinch click"
         self._pinching = pinching
         self._update_pose_gestures(y, finger_count, now)
         self._update_swipe_gesture(x, finger_count, now)
@@ -55,9 +57,9 @@ class HandSession:
         elif finger_count == 2:
             if self._last_scroll_y is not None:
                 delta = self._last_scroll_y - y
-                if abs(delta) >= 0.025:
+                if abs(delta) >= 0.012:
                     if self.mouse.enabled:
-                        pyautogui.scroll(max(-8, min(8, round(delta * 40))))
+                        pyautogui.scroll(max(-8, min(8, round(delta * 60))))
                     self.last_gesture = "2-finger scroll"
                     self._last_scroll_y = y
             else:
