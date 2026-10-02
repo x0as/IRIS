@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+import time
+import tkinter as tk
+from tkinter import messagebox
+
+from eye_mouse.calibration import Calibration
+from eye_mouse.camera import Camera
+from eye_mouse.config import Settings
+from eye_mouse.face_tracker import FaceTracker
+from eye_mouse.gaze_overlay import GazeOverlay
+from eye_mouse.screen import primary_screen_size
+from eye_mouse.tracking_session import TrackingSession
+
+
+class EyeMouseApp:
+    def __init__(self) -> None:
+        self.settings = Settings()
+        self.root = tk.Tk()
+        self.root.title("Project IRIS")
+        self.root.geometry("460x420")
+        self.root.configure(bg="#10151c")
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
+        self.root.bind("<Escape>", lambda _event: self.stop_tracking())
+        self.root.bind("<F8>", lambda _event: self.toggle_pause())
+        self.root.bind("c", lambda _event: self.start_calibration())
+        self.camera: Camera | None = None
+        self.tracker: FaceTracker | None = None
+        self.overlay: GazeOverlay | None = None
+        self.session: TrackingSession | None = None
+        self.estimator = None
+        self.tracking = False
+        self.paused = False
+        self.screen_size = primary_screen_size()
+        self.status = tk.StringVar(value="Preview mode. Calibrate before tracking.")
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        tk.Label(self.root, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
+        tk.Label(self.root, text="Webcam gaze control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
+        for text, command in (("START CALIBRATION", self.start_calibration), ("PREVIEW MODE", lambda: self.start_tracking(False)), ("MOUSE CONTROL MODE", lambda: self.start_tracking(True)), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
+            tk.Button(self.root, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
+        tk.Label(self.root, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
+        tk.Label(self.root, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(side="bottom", pady=16)
+
+    def _ensure_hardware(self) -> None:
+        if self.camera is None:
+            self.camera = Camera(self.settings.camera_index, self.settings.camera_width, self.settings.camera_height)
+            self.camera.open()
+        if self.tracker is None:
+            self.tracker = FaceTracker(self.settings.debug)
+
+    def start_calibration(self) -> None:
+        try:
+            self.stop_tracking()
+            self._ensure_hardware()
+            self.status.set("Calibration running. Follow the target dots...")
+            self.root.update()
+            self.estimator, error = Calibration(self.root, self.tracker, self.screen_size).run(self.camera)
+            self.status.set(f"Calibration complete. Average error: {error:.0f}px")
+            if error > 180:
+                messagebox.showwarning("Low calibration accuracy", "Accuracy is low. Try better lighting and keep your face visible.")
+        except Exception as exc:
+            messagebox.showerror("Calibration error", str(exc))
+            self.status.set("Calibration failed. Check the webcam and try again.")
+
+    def start_tracking(self, mouse_enabled: bool) -> None:
+        if self.estimator is None:
+            self.start_calibration()
+            if self.estimator is None:
+                return
+        try:
+            self._ensure_hardware()
+            self.settings.mouse_control_enabled = mouse_enabled
+            self.session = TrackingSession(self.settings, self.estimator)
+            self.session.mouse.enabled = mouse_enabled
+            self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
+            self.tracking = True
+            self.paused = False
+            mode = "mouse control" if mouse_enabled else "preview"
+            self.status.set(f"Tracking in {mode} mode. ESC stops immediately.")
+            self._tracking_tick()
+        except Exception as exc:
+            messagebox.showerror("Tracking error", str(exc))
+
+    def _tracking_tick(self) -> None:
+        if not self.tracking or self.camera is None or self.tracker is None:
+            return
+        frame = self.camera.read()
+        if frame is not None and not self.paused:
+            result = self.tracker.process(frame)
+            if result.face_detected and self.session is not None:
+                point = self.session.update(result.features)
+                if point is not None and self.overlay is not None:
+                    self.overlay.show_at(point)
+            elif self.overlay is not None:
+                self.overlay.hide()
+        self.root.after(10, self._tracking_tick)
+
+    def stop_tracking(self) -> None:
+        self.tracking = False
+        if self.overlay is not None:
+            self.overlay.close()
+            self.overlay = None
+        if self.session is not None:
+            self.session.mouse.enabled = False
+        self.status.set("Tracking stopped. Preview mode is safe to test.")
+
+    def toggle_pause(self) -> None:
+        if self.session is not None:
+            self.paused = not self.paused
+            self.session.paused = self.paused
+            self.status.set("Tracking paused." if self.paused else "Tracking resumed.")
+
+    def close(self) -> None:
+        self.stop_tracking()
+        if self.tracker is not None:
+            self.tracker.close()
+        if self.camera is not None:
+            self.camera.close()
+        self.root.destroy()
+
+    def run(self) -> None:
+        self.root.mainloop()
+
+
+if __name__ == "__main__":
+    EyeMouseApp().run()

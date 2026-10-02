@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+import time
+
+from .blink_detector import BlinkDetector
+from .config import Settings
+from .gaze_estimator import GazeEstimator
+from .models import GazePoint
+from .mouse_controller import MouseController
+from .smoothing import ExponentialSmoother
+
+
+class TrackingSession:
+    def __init__(self, settings: Settings, estimator: GazeEstimator) -> None:
+        self.settings = settings
+        self.estimator = estimator
+        self.smoother = ExponentialSmoother(settings.smoothing)
+        self.blink_detector = BlinkDetector(settings.blink_ear_threshold, settings.min_blink_duration, settings.long_blink_duration, settings.max_blink_duration, settings.double_blink_window, settings.click_cooldown)
+        self.mouse = MouseController(settings.mouse_control_enabled)
+        self.last_raw: GazePoint | None = None
+        self.last_smoothed: GazePoint | None = None
+        self.last_action = "None"
+        self.paused = False
+
+    def update(self, features, timestamp: float | None = None) -> GazePoint | None:
+        if self.paused or features is None:
+            return self.last_smoothed
+        timestamp = time.monotonic() if timestamp is None else timestamp
+        self.last_raw = self.estimator.predict(features.vector)
+        self.last_smoothed = self.smoother.update(self.last_raw)
+        self.mouse.move_to(self.last_smoothed)
+        action = self.blink_detector.update(features.ear, timestamp)
+        self.blink_detector.expire_pending(timestamp)
+        if action is not None:
+            self.mouse.click(action)
+            self.last_action = action.value
+        return self.last_smoothed
