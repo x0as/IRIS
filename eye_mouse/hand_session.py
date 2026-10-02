@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import time
 
-import numpy as np
 import pyautogui
 
 from .models import GazePoint
@@ -11,11 +10,10 @@ from .smoothing import ExponentialSmoother
 
 
 class HandSession:
-    def __init__(self, screen_size: tuple[int, int], smoothing: float, mouse_enabled: bool, estimator=None) -> None:
+    def __init__(self, screen_size: tuple[int, int], smoothing: float, mouse_enabled: bool) -> None:
         self.screen_width, self.screen_height = screen_size
         self.smoother = ExponentialSmoother(smoothing)
         self.mouse = MouseController(mouse_enabled)
-        self.estimator = estimator
         self.last_point: GazePoint | None = None
         self._pinching = False
         self._last_click = 0.0
@@ -26,10 +24,7 @@ class HandSession:
         self.last_gesture = "None"
 
     def update(self, x: float, y: float, pinching: bool, finger_count: int = 0) -> GazePoint:
-        if self.estimator is not None:
-            point = self.estimator.predict(np.array([x, y]))
-        else:
-            point = GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1))
+        point = GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1))
         point = self.smoother.update(point)
         self.last_point = point
         self.mouse.move_to(point)
