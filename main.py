@@ -4,6 +4,8 @@ import time
 import tkinter as tk
 from tkinter import messagebox
 
+import cv2
+
 from eye_mouse.calibration import Calibration
 from eye_mouse.camera import Camera
 from eye_mouse.config import Settings
@@ -64,6 +66,8 @@ class EyeMouseApp:
     def start_calibration(self) -> None:
         try:
             self.stop_tracking()
+            self.status.set("Opening camera for calibration...")
+            self.root.update()
             self._ensure_hardware()
             self.status.set("Calibration running. Follow the target dots...")
             self.root.update()
@@ -81,6 +85,8 @@ class EyeMouseApp:
             if self.estimator is None:
                 return
         try:
+            self.status.set("Opening camera for gaze tracking...")
+            self.root.update()
             self._ensure_hardware()
             self.settings.mouse_control_enabled = mouse_enabled
             self.session = TrackingSession(self.settings, self.estimator)
@@ -98,6 +104,8 @@ class EyeMouseApp:
     def start_hand_tracking(self, mouse_enabled: bool) -> None:
         try:
             self.stop_tracking()
+            self.status.set("Opening camera and loading hand model...")
+            self.root.update()
             self._ensure_hand_hardware()
             self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled)
             self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
@@ -129,6 +137,9 @@ class EyeMouseApp:
         if not self.tracking or self.camera is None or self.tracker is None:
             return
         frame = self.camera.read()
+        if frame is not None:
+            cv2.imshow("Project IRIS Camera", frame)
+            cv2.waitKey(1)
         if frame is not None and not self.paused:
             if self.tracking_mode == "hand":
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
@@ -163,6 +174,7 @@ class EyeMouseApp:
             self.session.mouse.enabled = False
         if hasattr(self, "hand_session"):
             self.hand_session.mouse.enabled = False
+        cv2.destroyWindow("Project IRIS Camera")
         self.status.set("Tracking stopped. Preview mode is safe to test.")
 
     def toggle_pause(self) -> None:
