@@ -77,24 +77,15 @@ def test_two_finger_neutral_does_not_scroll(monkeypatch):
 
 def test_pinch_click_does_not_move_cursor(monkeypatch):
     clicks = []
-    presses = []
-    releases = []
     moves = []
     monkeypatch.setattr("pyautogui.click", lambda **kwargs: clicks.append(kwargs))
-    monkeypatch.setattr("pyautogui.mouseDown", lambda **kwargs: presses.append(kwargs))
-    monkeypatch.setattr("pyautogui.mouseUp", lambda **kwargs: releases.append(kwargs))
     monkeypatch.setattr("pyautogui.moveTo", lambda *args, **kwargs: moves.append(args))
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     session.update(0.2, 0.5, False, 1)
     session.update(0.25, 0.5, True, 1)
-    session._pinch_started_at -= 0.6
-    session.update(0.35, 0.5, True, 1, index_near=True)
     session.update(0.35, 0.5, False, 1)
-    assert clicks == []
-    assert presses == [{"button": "left"}]
-    assert releases == [{"button": "left"}]
-    assert len(moves) == 2
-    assert moves[-1] != moves[0]
+    assert clicks == [{"button": "left"}]
+    assert moves == [(200, 400)]
 
 
 def test_middle_thumb_has_no_click_action(monkeypatch):

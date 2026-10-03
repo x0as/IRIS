@@ -190,7 +190,7 @@ class EyeMouseApp:
                     self._draw_camera_text(camera_frame, f"Fingers: {finger_names}", (18, 32), (255, 255, 255))
                     self._draw_camera_text(camera_frame, f"Action: {command}", (18, 64), (80, 220, 255))
                     gesture_text = self.hand_session.last_gesture.lower()
-                    if self.hand_session.last_gesture != previous_gesture and ("click" in gesture_text or "scroll" in gesture_text or "drag" in gesture_text):
+                    if self.hand_session.last_gesture != previous_gesture and ("click" in gesture_text or "scroll" in gesture_text):
                         if self.overlay is not None:
                             self.overlay.flash_click()
                     if self.overlay is not None:
@@ -222,10 +222,8 @@ class EyeMouseApp:
 
     @staticmethod
     def _hand_command(fingers: tuple[bool, ...], pinching: bool, middle_pinching: bool = False, index_near: bool = False) -> str:
-        if index_near:
-            return "PINCH TO CLICK / HOLD TO DRAG"
-        if pinching:
-            return "PINCH HOLD TO DRAG"
+        if index_near or pinching:
+            return "PINCH TO CLICK"
         if len(fingers) >= 5 and all(fingers):
             return "SWIPE TO SWITCH DESKTOP"
         if len(fingers) >= 4 and fingers[1] and fingers[2] and fingers[3] and not fingers[4]:
@@ -253,8 +251,7 @@ class EyeMouseApp:
         if self.session is not None:
             self.session.mouse.enabled = False
         if hasattr(self, "hand_session"):
-            self.hand_session.cancel_drag()
-            self.hand_session.mouse.enabled = False
+            self.hand_session.cancel_actions()
         try:
             cv2.destroyWindow("Project IRIS Camera")
         except cv2.error:
