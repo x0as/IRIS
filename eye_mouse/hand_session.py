@@ -28,9 +28,11 @@ class HandSession:
         self._last_finger_count = -1
         self._last_scroll_y: float | None = None
         self._dragging = False
+        self._alt_switch_until = 0.0
 
     def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False, middle_near: bool = False) -> GazePoint:
         now = time.monotonic()
+        self._release_alt_switch(now)
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
@@ -109,6 +111,13 @@ class HandSession:
             self.mouse.release_left()
             self._dragging = False
             self._pinching = False
+        self._release_alt_switch(time.monotonic(), force=True)
+
+    def _release_alt_switch(self, now: float, force: bool = False) -> None:
+        if self._alt_switch_until and (force or now >= self._alt_switch_until):
+            if self.mouse.enabled:
+                pyautogui.keyUp("alt")
+            self._alt_switch_until = 0.0
 
     def _update_swipe_gesture(self, x: float, finger_count: int, now: float) -> None:
         if not self.mouse.enabled:
@@ -140,7 +149,14 @@ class HandSession:
             self._set_gesture(f"open-palm desktop {'left' if direction == 'right' else 'right'}", now)
         else:
             if self.mouse.enabled:
-                pyautogui.hotkey("alt", "tab" if direction == "right" else "shift", "tab" if direction == "left" else "tab")
+                pyautogui.keyDown("alt")
+                if direction == "left":
+                    pyautogui.keyDown("shift")
+                    pyautogui.press("tab")
+                    pyautogui.keyUp("shift")
+                else:
+                    pyautogui.press("tab")
+                self._alt_switch_until = now + 0.8
             self._set_gesture(f"3-finger app switch {direction}", now)
         self._last_gesture_time = now
         self._gesture_start_x = x

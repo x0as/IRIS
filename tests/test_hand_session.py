@@ -18,6 +18,21 @@ def test_hand_swipe_shortcut(monkeypatch):
     assert calls == [("win", "ctrl", "left")]
 
 
+def test_three_finger_swipe_opens_app_switcher(monkeypatch):
+    events = []
+    monkeypatch.setattr("pyautogui.keyDown", lambda key: events.append(("down", key)))
+    monkeypatch.setattr("pyautogui.keyUp", lambda key: events.append(("up", key)))
+    monkeypatch.setattr("pyautogui.press", lambda key: events.append(("press", key)))
+    session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
+    fingers = (False, True, True, True, False)
+    session.update(0.20, 0.5, False, 3, fingers)
+    session._gesture_start_time -= 0.2
+    session.update(0.45, 0.5, False, 3, fingers)
+    assert events[:2] == [("down", "alt"), ("press", "tab")]
+    session._release_alt_switch(0.0, force=True)
+    assert events[-1] == ("up", "alt")
+
+
 def test_fist_clicks_once(monkeypatch):
     clicks = []
     monkeypatch.setattr("pyautogui.click", lambda **kwargs: clicks.append(kwargs))
