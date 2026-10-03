@@ -36,19 +36,13 @@ class HandSession:
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
-        right_pinch = middle_pinching or middle_near
-        pinch_freeze = pinching or right_pinch
+        pinch_freeze = pinching
         point = self.last_point if (index_middle or pinch_freeze) and self.last_point is not None else candidate
         self.last_point = point
         if self._dragging:
             self.mouse.move_to(point)
         elif not pinch_freeze and not index_middle and only_index:
             self.mouse.move_to(point)
-        if middle_pinching and not self._middle_pinching and now - self._last_click >= 0.6:
-            if self.mouse.enabled:
-                pyautogui.click(button="right")
-            self._last_click = now
-            self._set_gesture("RIGHT CLICK", now)
         if pinching and not self._pinching:
             self._pinch_started_at = now
             self._set_gesture("LEFT CLICK READY", now)

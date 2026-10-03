@@ -70,7 +70,7 @@ def test_pinch_click_does_not_move_cursor(monkeypatch):
     assert len(moves) == 2
 
 
-def test_middle_thumb_right_click(monkeypatch):
+def test_middle_thumb_has_no_click_action(monkeypatch):
     clicks = []
     moves = []
     monkeypatch.setattr("pyautogui.click", lambda **kwargs: clicks.append(kwargs))
@@ -79,5 +79,5 @@ def test_middle_thumb_right_click(monkeypatch):
     session.update(0.2, 0.5, False, 1, (False, True, False, False, False))
     session.update(0.5, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True, middle_near=True)
     session.update(0.7, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True, middle_near=True)
-    assert clicks == [{"button": "right"}]
+    assert clicks == []
     assert len(moves) == 1
