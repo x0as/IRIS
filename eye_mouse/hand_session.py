@@ -21,8 +21,8 @@ class HandSession:
         self._gesture_start_x: float | None = None
         self._gesture_start_time: float | None = None
         self._gesture_fingers: int | None = None
-        self._last_gesture_time = 0.0
         self.last_gesture = "None"
+        self._last_action_time = 0.0
         self._last_finger_count = -1
         self._last_scroll_y: float | None = None
         self._dragging = False
@@ -41,17 +41,25 @@ class HandSession:
         if pinching and not self._pinching:
             self._dragging = True
             self.mouse.press_left()
-            self.last_gesture = "DRAG START"
+            self._set_gesture("DRAG START", now)
         elif not pinching and self._pinching:
             self._dragging = False
             self.mouse.release_left()
-            self.last_gesture = "DRAG END"
+            self._set_gesture("DRAG END", now)
         elif pinching and self._dragging:
-            self.last_gesture = "DRAGGING"
+            self._set_gesture("DRAGGING", now)
         self._pinching = pinching
         self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, index_middle)
         self._update_swipe_gesture(x, finger_count, now)
         return point
+
+    def active_gesture(self, now: float | None = None) -> str | None:
+        timestamp = time.monotonic() if now is None else now
+        if self._dragging:
+            return "DRAGGING"
+        if timestamp - self._last_action_time <= 0.8:
+            return self.last_gesture
+        return None
 
     def _update_pose_gestures(self, y: float, finger_count: int, now: float, index_middle: bool = False) -> None:
         if not self.mouse.enabled and not self.gesture_preview:
@@ -63,7 +71,7 @@ class HandSession:
                 if self.mouse.enabled:
                     pyautogui.click(button="left")
                 self._last_click = now
-                self.last_gesture = "fist click"
+                self._set_gesture("fist click", now)
             self._last_scroll_y = None
         elif index_middle:
             if self._last_scroll_y is not None:
@@ -72,7 +80,7 @@ class HandSession:
                     scroll_direction = "up" if delta > 0 else "down"
                     if self.mouse.enabled:
                         pyautogui.scroll(max(-8, min(8, round(delta * 60))))
-                    self.last_gesture = f"SCROLL {scroll_direction.upper()}"
+                    self._set_gesture(f"SCROLL {scroll_direction.upper()}", now)
                     self._last_scroll_y = y
             else:
                 self._last_scroll_y = y
@@ -113,11 +121,15 @@ class HandSession:
             if self.mouse.enabled:
                 desktop_direction = "left" if direction == "right" else "right"
                 pyautogui.hotkey("win", "ctrl", desktop_direction)
-            self.last_gesture = f"open-palm desktop {'left' if direction == 'right' else 'right'}"
+            self._set_gesture(f"open-palm desktop {'left' if direction == 'right' else 'right'}", now)
         else:
             if self.mouse.enabled:
                 pyautogui.hotkey("alt", "tab" if direction == "right" else "shift", "tab" if direction == "left" else "tab")
-            self.last_gesture = f"3-finger app switch {direction}"
+            self._set_gesture(f"3-finger app switch {direction}", now)
         self._last_gesture_time = now
         self._gesture_start_x = x
         self._gesture_start_time = now
+
+    def _set_gesture(self, gesture: str, timestamp: float) -> None:
+        self.last_gesture = gesture
+        self._last_action_time = timestamp
