@@ -11,6 +11,7 @@ from eye_mouse.camera import Camera
 from eye_mouse.config import Settings
 from eye_mouse.face_tracker import FaceTracker
 from eye_mouse.gaze_overlay import GazeOverlay
+from eye_mouse.eye_gesture_controller import EyeGestureController
 from eye_mouse.hand_session import HandSession
 from eye_mouse.hand_tracker import HandTracker
 from eye_mouse.screen import primary_screen_size
@@ -31,6 +32,7 @@ class EyeMouseApp:
         self.camera: Camera | None = None
         self.tracker: FaceTracker | None = None
         self.hand_tracker: HandTracker | None = None
+        self.eye_gestures: EyeGestureController | None = None
         self.overlay: GazeOverlay | None = None
         self.session: TrackingSession | None = None
         self.estimator = None
@@ -96,6 +98,21 @@ class EyeMouseApp:
             if self.estimator is None:
                 return
         try:
+            if double_mode:
+                self.stop_tracking()
+                self.status.set("Opening camera for hand and eye-gesture control...")
+                self.root.update()
+                self._ensure_hand_hardware()
+                self._ensure_hardware()
+                self.hand_session = HandSession(self.screen_size, self.settings.smoothing, mouse_enabled)
+                self.eye_gestures = EyeGestureController(self.settings.blink_ear_threshold, cooldown=self.settings.click_cooldown)
+                self.tracking_mode = "double"
+                self.tracking = True
+                self.paused = False
+                self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
+                self.status.set("Double mode: hand control + eye gestures, no gaze cursor.")
+                self._tracking_tick()
+                return
             self.status.set("Opening camera for gaze tracking...")
             self.root.update()
             self._ensure_hardware()
@@ -149,16 +166,22 @@ class EyeMouseApp:
             return
         if self.tracking_mode == "hand" and self.hand_tracker is None:
             return
-        if self.tracking_mode == "gaze" and self.tracker is None:
+        if self.tracking_mode in ("gaze", "double") and self.tracker is None:
             return
         frame = self.camera.read()
         if frame is not None and not self.paused:
-            if self.tracking_mode == "hand":
+            if self.tracking_mode in ("hand", "double"):
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
                 if hand is not None:
                     x, y, pinching, middle_pinching, finger_count, fingers, palm_y = hand
                     previous_gesture = self.hand_session.last_gesture
                     point = self.hand_session.update(x, y, pinching, finger_count, fingers, palm_y, middle_pinching)
+                    if self.tracking_mode == "double" and self.eye_gestures is not None and self.tracker is not None:
+                        face_result = self.tracker.process(frame)
+                        if face_result.face_detected:
+                            eye_action = self.eye_gestures.update(face_result.features.left_ear, face_result.features.right_ear)
+                            if eye_action:
+                                self.hand_session._set_gesture(eye_action, time.monotonic())
                     finger_names = ", ".join(name for name, detected in zip(("thumb", "index", "middle", "ring", "pinky"), fingers) if detected) or "fist"
                     command = self.hand_session.active_gesture() or self._hand_command(fingers, pinching, middle_pinching)
                     self.status.set(f"Hand control | {finger_names} | {command}")
