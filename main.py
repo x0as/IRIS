@@ -93,7 +93,7 @@ class EyeMouseApp:
             self.status.set("Calibration failed. Check the webcam and try again.")
 
     def start_tracking(self, mouse_enabled: bool, double_mode: bool = False) -> None:
-        if self.estimator is None:
+        if not double_mode and self.estimator is None:
             self.start_calibration()
             if self.estimator is None:
                 return

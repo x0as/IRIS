@@ -41,7 +41,7 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - In Hand Control Mode, move your open palm left to go to the right desktop, or right to go to the left desktop.
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
 - `HAND TEST MODE` shows recognized hand gestures and pointer feedback without sending mouse clicks, scrolling, or Windows shortcuts.
-- `DOUBLE MODE` actually uses hand control for the cursor: hold the left eye closed to switch apps left (`Alt+Shift+Tab`), hold the right eye closed to switch apps right (`Alt+Tab`), double-blink the left eye for left click, and double-blink the right eye for right click.
+- `DOUBLE MODE` requires no gaze calibration. It uses hand control for the cursor: hold the left eye closed to switch apps left (`Alt+Shift+Tab`), hold the right eye closed to switch apps right (`Alt+Tab`), double-blink the left eye for left click, and double-blink the right eye for right click.
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 
