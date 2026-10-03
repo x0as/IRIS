@@ -77,7 +77,7 @@ def test_pinch_click_does_not_move_cursor(monkeypatch):
     session.update(0.2, 0.5, False, 1)
     session.update(0.25, 0.5, True, 1)
     session._pinch_started_at -= 0.6
-    session.update(0.35, 0.5, True, 1)
+    session.update(0.35, 0.5, True, 1, index_near=True)
     session.update(0.35, 0.5, False, 1)
     assert clicks == []
     assert presses == [{"button": "left"}]

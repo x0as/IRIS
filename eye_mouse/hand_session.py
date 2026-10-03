@@ -30,7 +30,7 @@ class HandSession:
         self._dragging = False
         self._alt_switch_until = 0.0
 
-    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False, middle_near: bool = False) -> GazePoint:
+    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False, middle_near: bool = False, index_near: bool = False) -> GazePoint:
         now = time.monotonic()
         self._release_alt_switch(now)
         if fingers is None:
@@ -38,7 +38,7 @@ class HandSession:
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
-        pinch_freeze = pinching
+        pinch_freeze = pinching or index_near
         point = self.last_point if (index_middle or (pinch_freeze and not self._dragging)) and self.last_point is not None else candidate
         self.last_point = point
         if self._dragging:
