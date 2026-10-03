@@ -34,10 +34,7 @@ class EyeGestureController:
                 elif not self._hold_sent[eye] and now - started >= self.hold_duration and now >= self._cooldown_until:
                     direction = "left" if eye == "left" else "right"
                     if pyautogui is not None:
-                        if direction == "left":
-                            pyautogui.hotkey("alt", "shift", "tab")
-                        else:
-                            pyautogui.hotkey("alt", "tab")
+                        pyautogui.hotkey("win", "ctrl", direction)
                     self._hold_sent[eye] = True
                     self._cooldown_until = now + self.cooldown
                     actions.append(f"SWITCH WINDOW {direction.upper()}")

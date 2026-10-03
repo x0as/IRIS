@@ -18,4 +18,4 @@ def test_held_eye_switches_window(monkeypatch):
     controller = EyeGestureController()
     controller.update(0.1, 0.3, 1.0)
     controller.update(0.1, 0.3, 1.8)
-    assert shortcuts == [("alt", "shift", "tab")]
+    assert shortcuts == [("win", "ctrl", "left")]
