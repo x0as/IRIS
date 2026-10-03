@@ -41,6 +41,7 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - In Hand Control Mode, move your open palm left to go to the right desktop, or right to go to the left desktop.
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
 - `HAND TEST MODE` shows recognized hand gestures and pointer feedback without sending mouse clicks, scrolling, or Windows shortcuts.
+- `DOUBLE MODE` uses gaze for cursor movement and two quick right-eye blinks for a right click.
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 

@@ -10,6 +10,8 @@ class EyeFeatures:
     ear: float
     left_iris: tuple[float, float]
     right_iris: tuple[float, float]
+    left_ear: float = 0.0
+    right_ear: float = 0.0
 
 
 @dataclass

@@ -55,7 +55,7 @@ class EyeMouseApp:
         canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(-int(event.delta / 120), "units"))
         tk.Label(content, text="PROJECT IRIS", fg="#ff4d6d", bg="#10151c", font=("Segoe UI", 26, "bold")).pack(pady=(28, 4))
         tk.Label(content, text="Webcam gaze and hand control", fg="#d8e0ea", bg="#10151c", font=("Segoe UI", 12)).pack(pady=(0, 20))
-        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("HAND TEST MODE", lambda: self.start_hand_tracking(False, True)), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True, False)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
+        for text, command in (("START CALIBRATION", self.start_calibration), ("GAZE PREVIEW", lambda: self.start_tracking(False)), ("GAZE MOUSE CONTROL", lambda: self.start_tracking(True)), ("DOUBLE MODE", lambda: self.start_tracking(True, True)), ("HAND TEST MODE", lambda: self.start_hand_tracking(False, True)), ("HAND CONTROL MODE", lambda: self.start_hand_tracking(True, False)), ("SETTINGS", self.show_settings), ("STOP / ESC", self.stop_tracking), ("EXIT", self.close)):
             tk.Button(content, text=text, command=command, width=28, height=2, bg="#1c2633", fg="white", activebackground="#2c3a4d", activeforeground="white", relief="flat", font=("Segoe UI", 10, "bold")).pack(pady=5)
         tk.Label(content, textvariable=self.status, fg="#aab6c5", bg="#10151c", wraplength=390, font=("Segoe UI", 10)).pack(pady=18)
         tk.Label(content, text="ESC stops  |  F8 pauses/resumes  |  C recalibrates  |  Scroll for all controls", fg="#738196", bg="#10151c", font=("Segoe UI", 9)).pack(pady=16)
@@ -90,7 +90,7 @@ class EyeMouseApp:
             messagebox.showerror("Calibration error", str(exc))
             self.status.set("Calibration failed. Check the webcam and try again.")
 
-    def start_tracking(self, mouse_enabled: bool) -> None:
+    def start_tracking(self, mouse_enabled: bool, double_mode: bool = False) -> None:
         if self.estimator is None:
             self.start_calibration()
             if self.estimator is None:
@@ -100,13 +100,13 @@ class EyeMouseApp:
             self.root.update()
             self._ensure_hardware()
             self.settings.mouse_control_enabled = mouse_enabled
-            self.session = TrackingSession(self.settings, self.estimator)
+            self.session = TrackingSession(self.settings, self.estimator, double_mode)
             self.tracking_mode = "gaze"
             self.session.mouse.enabled = mouse_enabled
             self.overlay = GazeOverlay(self.settings.indicator_size, self.settings.indicator_opacity) if self.settings.indicator_enabled else None
             self.tracking = True
             self.paused = False
-            mode = "mouse control" if mouse_enabled else "preview"
+            mode = "double" if double_mode else ("mouse control" if mouse_enabled else "preview")
             self.status.set(f"Tracking in {mode} mode. ESC stops immediately.")
             self._tracking_tick()
         except Exception as exc:

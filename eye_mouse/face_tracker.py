@@ -68,7 +68,8 @@ class FaceTracker:
             self._eye_aspect_ratio(points, (33, 160, 158, 133, 153, 144)),
             self._eye_aspect_ratio(points, (362, 385, 387, 263, 373, 380)),
         ]
-        ear = float(sum(ear_values) / len(ear_values))
+        left_ear, right_ear = (float(value) for value in ear_values)
+        ear = (left_ear + right_ear) / 2
         vector = np.array(
             [left_ratio[0], left_ratio[1], right_ratio[0], right_ratio[1], face_center[0], face_center[1], face_scale],
             dtype=float,
@@ -79,7 +80,7 @@ class FaceTracker:
                 cv2.circle(debug_frame, tuple(point.astype(int)), 3, (0, 255, 0), -1)
             frame = debug_frame
         return TrackingResult(
-            features=EyeFeatures(vector, ear, tuple(left_iris), tuple(right_iris)),
+            features=EyeFeatures(vector, ear, tuple(left_iris), tuple(right_iris), left_ear, right_ear),
             face_detected=True,
             frame=frame,
         )
