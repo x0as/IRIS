@@ -183,7 +183,8 @@ class EyeMouseApp:
                             if eye_action:
                                 self.hand_session._set_gesture(eye_action, time.monotonic())
                     finger_names = ", ".join(name for name, detected in zip(("thumb", "index", "middle", "ring", "pinky"), fingers) if detected) or "fist"
-                    command = self.hand_session.active_gesture() or self._hand_command(fingers, pinching, middle_pinching)
+                    pose_command = self._hand_command(fingers, pinching, middle_pinching, index_near)
+                    command = pose_command if index_near or pinching else (self.hand_session.active_gesture() or pose_command)
                     self.status.set(f"Hand control | {finger_names} | {command}")
                     camera_frame = self.hand_tracker.last_frame if self.hand_tracker is not None else frame
                     self._draw_camera_text(camera_frame, f"Fingers: {finger_names}", (18, 32), (255, 255, 255))
@@ -220,7 +221,9 @@ class EyeMouseApp:
         self.root.after(10, self._tracking_tick)
 
     @staticmethod
-    def _hand_command(fingers: tuple[bool, ...], pinching: bool, middle_pinching: bool = False) -> str:
+    def _hand_command(fingers: tuple[bool, ...], pinching: bool, middle_pinching: bool = False, index_near: bool = False) -> str:
+        if index_near:
+            return "PINCH TO CLICK / HOLD TO DRAG"
         if pinching:
             return "PINCH HOLD TO DRAG"
         if len(fingers) >= 5 and all(fingers):
