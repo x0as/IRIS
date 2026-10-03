@@ -36,7 +36,7 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - Index finger only: move the cursor
 - Index + middle fingers: move vertically to scroll up or down
 - Quick thumb + index pinch: left click
-- Thumb + index pinch held for 350 ms: start dragging; release the pinch to release the mouse button
+- Thumb + index pinch held for 500 ms: start dragging; release the pinch to release the mouse button
 - Thumb + middle pinch: right click
 - In Hand Control Mode, move your open palm left to go to the right desktop, or right to go to the left desktop.
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.

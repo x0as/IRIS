@@ -48,7 +48,7 @@ class HandSession:
         if pinching and not self._pinching:
             self._pinch_started_at = now
             self._set_gesture("LEFT CLICK READY", now)
-        elif pinching and not self._dragging and self._pinch_started_at is not None and now - self._pinch_started_at >= 0.35:
+        elif pinching and not self._dragging and self._pinch_started_at is not None and now - self._pinch_started_at >= 0.50:
             self._dragging = True
             self.mouse.press_left()
             self._set_gesture("DRAG START", now)

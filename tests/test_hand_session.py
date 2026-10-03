@@ -61,7 +61,7 @@ def test_pinch_click_does_not_move_cursor(monkeypatch):
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     session.update(0.2, 0.5, False, 1)
     session.update(0.25, 0.5, True, 1)
-    session._pinch_started_at -= 0.4
+    session._pinch_started_at -= 0.6
     session.update(0.35, 0.5, True, 1)
     session.update(0.35, 0.5, False, 1)
     assert clicks == []
