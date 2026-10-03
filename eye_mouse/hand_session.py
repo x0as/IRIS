@@ -37,7 +37,7 @@ class HandSession:
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
         pinch_freeze = pinching
-        point = self.last_point if (index_middle or pinch_freeze) and self.last_point is not None else candidate
+        point = self.last_point if (index_middle or (pinch_freeze and not self._dragging)) and self.last_point is not None else candidate
         self.last_point = point
         if self._dragging:
             self.mouse.move_to(point)

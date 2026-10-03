@@ -68,6 +68,7 @@ def test_pinch_click_does_not_move_cursor(monkeypatch):
     assert presses == [{"button": "left"}]
     assert releases == [{"button": "left"}]
     assert len(moves) == 2
+    assert moves[-1] != moves[0]
 
 
 def test_middle_thumb_has_no_click_action(monkeypatch):
