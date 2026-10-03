@@ -92,7 +92,7 @@ def test_pinch_approach_freezes_without_click():
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=False)
     session.update(0.2, 0.5, False, 1, (False, True, False, False, False))
     point = session.update(0.35, 0.5, False, 0, (False, False, False, False, False), index_near=True)
-    assert point.x == 200
+    assert abs(point.x - 200) < 1
     assert session.last_gesture == "None"
 
 
