@@ -47,9 +47,11 @@ class HandTracker:
         index_tip = landmarks[8]
         thumb_tip = landmarks[4]
         pinch_distance = np.hypot(index_tip.x - thumb_tip.x, index_tip.y - thumb_tip.y)
+        middle_tip = landmarks[12]
+        middle_pinch_distance = np.hypot(middle_tip.x - thumb_tip.x, middle_tip.y - thumb_tip.y)
         fingers = self._extended_fingers(landmarks)
         palm_y = float(np.mean([landmarks[index].y for index in (0, 5, 9, 13, 17)]))
-        return float(index_tip.x), float(index_tip.y), bool(pinch_distance < 0.055), sum(fingers), fingers, palm_y
+        return float(index_tip.x), float(index_tip.y), bool(pinch_distance < 0.055), bool(middle_pinch_distance < 0.055), sum(fingers), fingers, palm_y
 
     @staticmethod
     def _extended_fingers(landmarks) -> tuple[bool, bool, bool, bool, bool]:

@@ -17,6 +17,8 @@ class HandSession:
         self.gesture_preview = gesture_preview
         self.last_point: GazePoint | None = None
         self._pinching = False
+        self._middle_pinching = False
+        self._pinch_started_at: float | None = None
         self._last_click = 0.0
         self._gesture_start_x: float | None = None
         self._gesture_start_time: float | None = None
@@ -27,7 +29,7 @@ class HandSession:
         self._last_scroll_y: float | None = None
         self._dragging = False
 
-    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None) -> GazePoint:
+    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False) -> GazePoint:
         now = time.monotonic()
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
@@ -38,17 +40,33 @@ class HandSession:
         self.last_point = point
         if (not pinching or self._dragging) and not index_middle and only_index:
             self.mouse.move_to(point)
+        if middle_pinching and not self._middle_pinching and now - self._last_click >= 0.6:
+            if self.mouse.enabled:
+                pyautogui.click(button="right")
+            self._last_click = now
+            self._set_gesture("RIGHT CLICK", now)
         if pinching and not self._pinching:
+            self._pinch_started_at = now
+            self._set_gesture("LEFT CLICK READY", now)
+        elif pinching and not self._dragging and self._pinch_started_at is not None and now - self._pinch_started_at >= 0.35:
             self._dragging = True
             self.mouse.press_left()
             self._set_gesture("DRAG START", now)
         elif not pinching and self._pinching:
-            self._dragging = False
-            self.mouse.release_left()
-            self._set_gesture("DRAG END", now)
+            if self._dragging:
+                self._dragging = False
+                self.mouse.release_left()
+                self._set_gesture("DRAG END", now)
+            elif now - self._last_click >= 0.6:
+                if self.mouse.enabled:
+                    pyautogui.click(button="left")
+                self._last_click = now
+                self._set_gesture("LEFT CLICK", now)
+            self._pinch_started_at = None
         elif pinching and self._dragging:
             self._set_gesture("DRAGGING", now)
         self._pinching = pinching
+        self._middle_pinching = middle_pinching
         self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, index_middle)
         self._update_swipe_gesture(x, finger_count, now)
         return point
