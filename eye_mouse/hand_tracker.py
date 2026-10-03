@@ -52,7 +52,7 @@ class HandTracker:
         fingers = self._extended_fingers(landmarks)
         palm_y = float(np.mean([landmarks[index].y for index in (0, 5, 9, 13, 17)]))
         index_pinch = fingers[1] and pinch_distance < 0.045
-        index_near = fingers[1] and pinch_distance < 0.10
+        index_near = pinch_distance < 0.10
         return float(index_tip.x), float(index_tip.y), index_pinch, bool(middle_pinch_distance < 0.055), middle_pinch_distance < 0.12, index_near, sum(fingers), fingers, palm_y
 
     @staticmethod
