@@ -36,14 +36,15 @@ class HandSession:
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
+        middle_ring = fingers[2] and fingers[3] and not fingers[1] and not fingers[4]
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
         pinch_freeze = pinching or index_near
-        point = self.last_point if (index_middle or (pinch_freeze and not self._dragging)) and self.last_point is not None else candidate
+        point = self.last_point if (index_middle or middle_ring or (pinch_freeze and not self._dragging)) and self.last_point is not None else candidate
         self.last_point = point
         if self._dragging:
             self.mouse.move_to(point)
-        elif not pinch_freeze and not index_middle and only_index:
+        elif not pinch_freeze and not index_middle and not middle_ring and only_index:
             self.mouse.move_to(point)
         if pinching and not self._pinching:
             self._pinch_started_at = now
@@ -67,7 +68,8 @@ class HandSession:
             self._set_gesture("DRAGGING", now)
         self._pinching = pinching
         self._middle_pinching = middle_pinching
-        self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, index_middle)
+        scroll_direction = "down" if index_middle else "up" if middle_ring else None
+        self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, scroll_direction)
         self._update_swipe_gesture(x, finger_count, now)
         return point
 
@@ -79,10 +81,10 @@ class HandSession:
             return self.last_gesture
         return None
 
-    def _update_pose_gestures(self, y: float, finger_count: int, now: float, index_middle: bool = False) -> None:
+    def _update_pose_gestures(self, y: float, finger_count: int, now: float, scroll_direction: str | None = None) -> None:
         if not self.mouse.enabled and not self.gesture_preview:
             self._last_finger_count = finger_count
-            self._last_scroll_y = y if index_middle else None
+            self._last_scroll_y = y if scroll_direction else None
             return
         if finger_count == 0:
             if self._last_finger_count != 0 and now - self._last_click >= 0.6:
@@ -91,13 +93,13 @@ class HandSession:
                 self._last_click = now
                 self._set_gesture("fist click", now)
             self._last_scroll_y = None
-        elif index_middle:
+        elif scroll_direction:
             if self._last_scroll_y is not None:
                 delta = self._last_scroll_y - y
                 if abs(delta) >= 0.012:
-                    scroll_direction = "up" if delta > 0 else "down"
                     if self.mouse.enabled:
-                        pyautogui.scroll(max(-8, min(8, round(delta * 60))))
+                        amount = abs(round(delta * 60))
+                        pyautogui.scroll(amount if scroll_direction == "up" else -amount)
                     self._set_gesture(f"SCROLL {scroll_direction.upper()}", now)
                     self._last_scroll_y = y
             else:

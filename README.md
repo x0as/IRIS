@@ -34,7 +34,8 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - Hand mode pinch: left click
 - Fist transition: single left click
 - Index finger only: move the cursor
-- Index + middle fingers: move vertically to scroll up or down
+- Index + middle fingers: move vertically to scroll down
+- Middle + ring fingers: move vertically to scroll up
 - Quick thumb + index pinch: left click
 - Thumb + index pinch held for 500 ms: start dragging; release the pinch to release the mouse button
 - In Hand Control Mode, move your open palm left to go to the right desktop, or right to go to the left desktop.
