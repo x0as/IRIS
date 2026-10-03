@@ -20,3 +20,11 @@ class MouseController:
         if not self.enabled:
             return
         pyautogui.click(button="left" if action == BlinkAction.LEFT_CLICK else "right")
+
+    def press_left(self) -> None:
+        if self.enabled:
+            pyautogui.mouseDown(button="left")
+
+    def release_left(self) -> None:
+        if self.enabled:
+            pyautogui.mouseUp(button="left")

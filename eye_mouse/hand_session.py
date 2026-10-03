@@ -25,6 +25,7 @@ class HandSession:
         self.last_gesture = "None"
         self._last_finger_count = -1
         self._last_scroll_y: float | None = None
+        self._dragging = False
 
     def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None) -> GazePoint:
         now = time.monotonic()
@@ -33,14 +34,20 @@ class HandSession:
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
-        point = self.last_point if (pinching or index_middle) and self.last_point is not None else candidate
+        point = self.last_point if index_middle and self.last_point is not None else candidate
         self.last_point = point
-        if not pinching and not index_middle and only_index:
+        if (not pinching or self._dragging) and not index_middle and only_index:
             self.mouse.move_to(point)
-        if pinching and not self._pinching and now - self._last_click >= 0.6 and self.mouse.enabled:
-            pyautogui.click(button="left")
-            self._last_click = now
-            self.last_gesture = "pinch click"
+        if pinching and not self._pinching:
+            self._dragging = True
+            self.mouse.press_left()
+            self.last_gesture = "DRAG START"
+        elif not pinching and self._pinching:
+            self._dragging = False
+            self.mouse.release_left()
+            self.last_gesture = "DRAG END"
+        elif pinching and self._dragging:
+            self.last_gesture = "DRAGGING"
         self._pinching = pinching
         self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, index_middle)
         self._update_swipe_gesture(x, finger_count, now)
@@ -72,6 +79,12 @@ class HandSession:
         else:
             self._last_scroll_y = None
         self._last_finger_count = finger_count
+
+    def cancel_drag(self) -> None:
+        if self._dragging:
+            self.mouse.release_left()
+            self._dragging = False
+            self._pinching = False
 
     def _update_swipe_gesture(self, x: float, finger_count: int, now: float) -> None:
         if not self.mouse.enabled:
