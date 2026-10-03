@@ -77,7 +77,7 @@ def test_middle_thumb_right_click(monkeypatch):
     monkeypatch.setattr("pyautogui.moveTo", lambda *args, **kwargs: moves.append(args))
     session = HandSession((1000, 800), smoothing=1.0, mouse_enabled=True)
     session.update(0.2, 0.5, False, 1, (False, True, False, False, False))
-    session.update(0.5, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True)
-    session.update(0.7, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True)
+    session.update(0.5, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True, middle_near=True)
+    session.update(0.7, 0.5, False, 2, (True, True, True, False, False), middle_pinching=True, middle_near=True)
     assert clicks == [{"button": "right"}]
     assert len(moves) == 1

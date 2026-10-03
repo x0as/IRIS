@@ -29,16 +29,16 @@ class HandSession:
         self._last_scroll_y: float | None = None
         self._dragging = False
 
-    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False) -> GazePoint:
+    def update(self, x: float, y: float, pinching: bool, finger_count: int = 0, fingers: tuple[bool, ...] | None = None, palm_y: float | None = None, middle_pinching: bool = False, middle_near: bool = False) -> GazePoint:
         now = time.monotonic()
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
         index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
         only_index = fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
-        point = self.last_point if (index_middle or middle_pinching) and self.last_point is not None else candidate
+        point = self.last_point if (index_middle or middle_near) and self.last_point is not None else candidate
         self.last_point = point
-        if (not pinching and not middle_pinching or self._dragging) and not index_middle and only_index:
+        if (not pinching and not middle_near or self._dragging) and not index_middle and only_index:
             self.mouse.move_to(point)
         if middle_pinching and not self._middle_pinching and now - self._last_click >= 0.6:
             if self.mouse.enabled:

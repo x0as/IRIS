@@ -173,9 +173,9 @@ class EyeMouseApp:
             if self.tracking_mode in ("hand", "double"):
                 hand = self.hand_tracker.process(frame) if self.hand_tracker is not None else None
                 if hand is not None:
-                    x, y, pinching, middle_pinching, finger_count, fingers, palm_y = hand
+                    x, y, pinching, middle_pinching, middle_near, finger_count, fingers, palm_y = hand
                     previous_gesture = self.hand_session.last_gesture
-                    point = self.hand_session.update(x, y, pinching, finger_count, fingers, palm_y, middle_pinching)
+                    point = self.hand_session.update(x, y, pinching, finger_count, fingers, palm_y, middle_pinching, middle_near)
                     if self.tracking_mode == "double" and self.eye_gestures is not None and self.tracker is not None:
                         face_result = self.tracker.process(frame)
                         if face_result.face_detected:
