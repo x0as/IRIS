@@ -110,7 +110,7 @@ class HandSession:
             self._gesture_start_x = x
             self._gesture_start_time = now
             return
-        if now - self._last_gesture_time < 1.0 or self._gesture_start_time is None:
+        if now - self._last_action_time < 1.0 or self._gesture_start_time is None:
             return
         elapsed = now - self._gesture_start_time
         distance = x - self._gesture_start_x
