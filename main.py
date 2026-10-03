@@ -221,8 +221,6 @@ class EyeMouseApp:
 
     @staticmethod
     def _hand_command(fingers: tuple[bool, ...], pinching: bool, middle_pinching: bool = False) -> str:
-        if middle_pinching:
-            return "NO HAND RIGHT-CLICK COMMAND"
         if pinching:
             return "PINCH HOLD TO DRAG"
         if len(fingers) >= 5 and all(fingers):
