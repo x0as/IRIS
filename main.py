@@ -225,6 +225,8 @@ class EyeMouseApp:
             return "PINCH HOLD TO DRAG"
         if len(fingers) >= 5 and all(fingers):
             return "SWIPE TO SWITCH DESKTOP"
+        if len(fingers) >= 4 and fingers[1] and fingers[2] and fingers[3] and not fingers[4]:
+            return "SWIPE TO SWITCH WINDOWS"
         if len(fingers) >= 4 and fingers[1] and fingers[2] and not any(fingers[3:]):
             return "SCROLL UP/DOWN"
         if len(fingers) >= 2 and fingers[1] and not any(fingers[2:]):
