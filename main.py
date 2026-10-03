@@ -224,15 +224,15 @@ class EyeMouseApp:
     def _hand_command(fingers: tuple[bool, ...], pinching: bool, middle_pinching: bool = False, index_near: bool = False) -> str:
         if index_near or pinching:
             return "PINCH TO CLICK"
-        if len(fingers) >= 5 and all(fingers):
+        if len(fingers) >= 5 and fingers[0] and all(fingers):
             return "SWIPE TO SWITCH DESKTOP"
-        if len(fingers) >= 4 and fingers[1] and fingers[2] and fingers[3] and not fingers[4]:
+        if len(fingers) >= 4 and fingers[0] and fingers[1] and fingers[2] and fingers[3] and not fingers[4]:
             return "SWIPE TO SWITCH WINDOWS"
-        if len(fingers) >= 4 and fingers[1] and fingers[2] and not any(fingers[3:]):
+        if len(fingers) >= 4 and fingers[0] and fingers[1] and fingers[2] and not any(fingers[3:]):
             return "SCROLL DOWN"
-        if len(fingers) >= 4 and fingers[2] and fingers[3] and not fingers[1] and not fingers[4]:
+        if len(fingers) >= 4 and fingers[0] and fingers[2] and fingers[3] and not fingers[1] and not fingers[4]:
             return "SCROLL UP"
-        if len(fingers) >= 2 and fingers[1] and not any(fingers[2:]):
+        if len(fingers) >= 2 and fingers[0] and fingers[1] and not any(fingers[2:]):
             return "MOVE CURSOR"
         if not any(fingers):
             return "FIST CLICK"

@@ -51,8 +51,9 @@ class HandTracker:
         middle_pinch_distance = np.hypot(middle_tip.x - thumb_tip.x, middle_tip.y - thumb_tip.y)
         fingers = self._extended_fingers(landmarks)
         palm_y = float(np.mean([landmarks[index].y for index in (0, 5, 9, 13, 17)]))
-        index_pinch = fingers[1] and pinch_distance < 0.045
-        index_near = pinch_distance < 0.10
+        thumb_outward = self._thumb_is_outward(landmarks)
+        index_pinch = thumb_outward and fingers[1] and pinch_distance < 0.045
+        index_near = thumb_outward and pinch_distance < 0.10
         return float(index_tip.x), float(index_tip.y), index_pinch, bool(middle_pinch_distance < 0.055), middle_pinch_distance < 0.12, index_near, sum(fingers), fingers, palm_y
 
     @staticmethod
@@ -64,6 +65,15 @@ class HandTracker:
             joint = landmarks[joint_index]
             extended.append(np.hypot(tip.x - wrist.x, tip.y - wrist.y) > np.hypot(joint.x - wrist.x, joint.y - wrist.y))
         return tuple(extended)
+
+    @staticmethod
+    def _thumb_is_outward(landmarks) -> bool:
+        wrist = landmarks[0]
+        thumb_tip = landmarks[4]
+        thumb_joint = landmarks[3]
+        tip_distance = np.hypot(thumb_tip.x - wrist.x, thumb_tip.y - wrist.y)
+        joint_distance = np.hypot(thumb_joint.x - wrist.x, thumb_joint.y - wrist.y)
+        return tip_distance > joint_distance * 1.08
 
     def close(self) -> None:
         self._landmarker.close()

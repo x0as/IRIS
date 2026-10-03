@@ -14,25 +14,9 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## Run
-
-```powershell
-python main.py
-```
-
-Choose `START CALIBRATION`, look at each dot until it advances, then use `PREVIEW MODE` first. Preview mode moves the visible gaze indicator but never moves or clicks the OS mouse. `MOUSE CONTROL MODE` enables cursor movement and blink clicks.
-
-If gaze tracking is not reliable enough for your camera or lighting, use `HAND CONTROL MODE`. The detected index fingertip is mapped directly from the camera view to the primary screen and smoothed for cursor control.
-
 ## Controls
 
-- `ESC`: stop tracking and disable mouse actions
-- `F8`: pause or resume tracking
-- `C`: stop and recalibrate
-- Two short blinks: left click
-- One longer blink: right click
 - Hand mode pinch: left click
-- Fist transition: single left click
 - Index finger only: move the cursor
 - Index + middle fingers: move vertically to scroll down
 - Middle + ring fingers: move vertically to scroll up
@@ -41,6 +25,7 @@ If gaze tracking is not reliable enough for your camera or lighting, use `HAND C
 - In Hand Control Mode, a 3-finger horizontal swipe sends `Alt+Shift+Tab` or `Alt+Tab` to switch apps.
 - `HAND TEST MODE` shows recognized hand gestures and pointer feedback without sending mouse clicks, scrolling, or Windows shortcuts.
 - `DOUBLE MODE` requires no gaze calibration. It uses hand control for the cursor: hold the left eye closed to switch virtual desktops left (`Win+Ctrl+Left`), hold the right eye closed to switch virtual desktops right (`Win+Ctrl+Right`), double-blink the left eye for left click, and double-blink the right eye for right click.
+- Hand commands require the thumb to be visibly extended outward; a folded-thumb pose is ignored except for fist detection.
 
 The default session starts with mouse control disabled. The primary monitor resolution is detected dynamically. If the face is lost, the last cursor position is frozen and gesture processing stops until landmarks return.
 

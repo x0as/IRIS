@@ -34,9 +34,10 @@ class HandSession:
         self._release_alt_switch(now)
         if fingers is None:
             fingers = (False, finger_count == 1, finger_count == 2, finger_count == 3, finger_count == 4)
-        index_middle = fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
-        middle_ring = fingers[2] and fingers[3] and not fingers[1] and not fingers[4]
-        only_index = fingers[1] and not any(fingers[2:])
+        thumb_outward = fingers[0]
+        index_middle = thumb_outward and fingers[1] and fingers[2] and not fingers[3] and not fingers[4]
+        middle_ring = thumb_outward and fingers[2] and fingers[3] and not fingers[1] and not fingers[4]
+        only_index = thumb_outward and fingers[1] and not any(fingers[2:])
         candidate = self.smoother.update(GazePoint(x * (self.screen_width - 1), y * (self.screen_height - 1)))
         pinch_freeze = pinching or index_near or (not pinching and self._pinching)
         point = self.last_point if (index_middle or middle_ring or pinch_freeze) and self.last_point is not None else candidate
@@ -55,7 +56,7 @@ class HandSession:
         self._middle_pinching = middle_pinching
         scroll_direction = "down" if index_middle else "up" if middle_ring else None
         self._update_pose_gestures(y if palm_y is None else palm_y, finger_count, now, scroll_direction)
-        self._update_swipe_gesture(x, finger_count, now)
+        self._update_swipe_gesture(x, finger_count, now, thumb_outward)
         return point
 
     def active_gesture(self, now: float | None = None) -> str | None:
@@ -102,7 +103,12 @@ class HandSession:
                 pyautogui.keyUp("alt")
             self._alt_switch_until = 0.0
 
-    def _update_swipe_gesture(self, x: float, finger_count: int, now: float) -> None:
+    def _update_swipe_gesture(self, x: float, finger_count: int, now: float, thumb_outward: bool = True) -> None:
+        if not thumb_outward:
+            self._gesture_start_x = None
+            self._gesture_start_time = None
+            self._gesture_fingers = None
+            return
         if not self.mouse.enabled:
             self._gesture_start_x = x
             self._gesture_start_time = now
